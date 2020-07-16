@@ -9,6 +9,9 @@ datesin = ['2019-11-12', '2019-11-13', '2019-11-14', '2019-11-15', '2019-11-16']
 
 saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Woodgate Beach'
 
+#Fire Data
+hrspace = 3
+
 #Windspeed/hill length interaction
 windhill = 8 / 5
 upperwindlim = 10
@@ -23,6 +26,6 @@ vee = 0.5       #spread constant
 kapa = 0.8      #growth constant
 
 #array sizes
-n = 10
-m = 20
+n = ysize
+m = xsize
 t = 10

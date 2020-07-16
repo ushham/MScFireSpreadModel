@@ -45,13 +45,12 @@ watloc = waterfolder + '\\' + waterfile
 #Extract Fire Data
 print('Extracting Fire Data')
 fireloc = firefolder + '\\' + firefile
-hrspace = 6
-# fd.IterateFire(fireloc, saveloc, hrspace, datesin, coord1, coord2, xsize, ysize)
+fd.IterateFire(fireloc, saveloc + '\\FireData', p.hrspace, datesin, coord1, coord2, xsize, ysize)
 
 #Extract Wind Data
-wethloc = weatherfolder + '\\' + weatherfile
-dt = datetime(2019, 11, 13, 0, 0)
-reppday = 1
-wnd.WindDat(wethloc, saveloc, dt, len(datesin), hrspace / reppday, (-25, -152.25), coord1, coord2, xsize, ysize)
+# wethloc = weatherfolder + '\\' + weatherfile
+# dt = datetime(2019, 11, 13, 0, 0)
+# reppday = 1
+# wnd.WindDat(wethloc, saveloc, dt, len(datesin), hrspace / reppday, (-25, -152.25), coord1, coord2, xsize, ysize)
 
 #Produce Wind/Slope
