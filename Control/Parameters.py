@@ -1,16 +1,16 @@
 #Basic parameters
-coord1 = (-25, 152.4)
-coord2 = (-25.2, 152.7)
+coord1 = (-14.8142, 131.1556)
+coord2 = (-15.1381, 131.5446)
 
 xsize = 400
 ysize = 400
 
-datesin = ['2019-11-12', '2019-11-13', '2019-11-14', '2019-11-15', '2019-11-16']
+datesin = ['2019-11-16', '2019-11-17', '2019-11-18', '2019-11-19', '2019-11-20', '2019-11-21']
 
-saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Woodgate Beach'
+saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\North WA'
 
 #Fire Data
-hrspace = 3
+hrspace = 12
 
 #Windspeed/hill length interaction
 windhill = 8 / 5
