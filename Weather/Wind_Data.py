@@ -22,8 +22,8 @@ def WindDat(fileloc, dumploc, datestart, days, hourgap, coordstart, coord1, coor
     for time in range(timeits):
         tim = datestart + timedelta(hours = hourgap * time)
 
-        u = ge.GribExt(fileloc, coordstart, tim, '10U', delx, dely)
-        v = ge.GribExt(fileloc, coordstart, tim, '10V', delx, dely)
+        u = ge.GribExt(fileloc, coordstart, coord1, tim, '10U', delx, dely)
+        v = ge.GribExt(fileloc, coordstart, coord1, tim, '10V', delx, dely)
 
         #convert small array to big array
         uout = np.zeros((xres, yres))

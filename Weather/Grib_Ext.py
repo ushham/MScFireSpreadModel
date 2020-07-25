@@ -10,7 +10,7 @@ res = 0.25
 timelabel = 'GRIB_REF_TIME'
 elementlabel = 'GRIB_ELEMENT'
 
-def GribExt(fileloc, coordstart, datet, ele, nx, ny):
+def GribExt(fileloc, coordstart, coord1, datet, ele, nx, ny):
     #Open file
     resinv = 1 / res
     dataset = gdal.Open(fileloc, gdal.GA_ReadOnly)
@@ -31,13 +31,15 @@ def GribExt(fileloc, coordstart, datet, ele, nx, ny):
             out = np.zeros((nx, ny))
             for x in range(nx):
                 for y in range(ny):
-                    coordy = round((coordstart[0] - res * y) * resinv) / resinv
-                    coordx = round((coordstart[1] + res * x) * resinv) / resinv
+                    coordy = round(((coordstart[0] - coord1[0]) - res * y) * resinv) / resinv
+                    coordx = round(((coord1[1] - coordstart[1]) + res * x) * resinv) / resinv
 
-                    coordx = int((coordx - coordstart[1]) / res)
-                    coordy = int((coordstart[0] - coordy) / res)
 
-                    out[x, y] = dataset.GetRasterBand(i).ReadAsArray()[coordx, coordy]
+
+                    coordx = int(coordx / res)
+                    coordy = int(coordy / res)
+
+                    out[x, y] = dataset.GetRasterBand(i).ReadAsArray()[coordy, coordx]
 
     return out
 
