@@ -1,5 +1,6 @@
 from osgeo import gdal
 from datetime import datetime
+import calendar
 import numpy as np
 
 #GRIB Constants
@@ -15,8 +16,8 @@ def GribExt(fileloc, coordstart, coord1, datet, ele, nx, ny):
     resinv = 1 / res
     dataset = gdal.Open(fileloc, gdal.GA_ReadOnly)
     message_count = dataset.RasterCount
-
     unixtime = datetime.timestamp(datet)
+
     out = None
     for i in range(1, message_count):
         #Extract data from GRIB
