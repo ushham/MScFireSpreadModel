@@ -2,15 +2,7 @@ import numpy as np
 import math
 from numba import jit
 import random
-from CA_Spreading import CA_Definition as var
-
-################# Definition of Spread (forward Eular) ##########
-@jit(nopython = True)
-def H(x, y, z):
-    C = var.vee * var.delt / var.delx ** 2
-    n = y + C * (x - 2 * y + z) + var.kapa * var.delt * y * (1 - y)
-    return n
-
+from CA_Spreading import CA_Definition as p
 
 ############## Make Transition Matrix ############
 @jit(nopython = True)
@@ -22,13 +14,12 @@ def Pmaker(k, deturm, L, H):
             for c in A:
                 alpha = a * (k ** 2) + (b * k) + c
                 X = np.zeros(k)
-                d = 0
+
                 for ell in range(L):
                     x = np.random.uniform(a / k, (a + 1) / k)
                     y = np.random.uniform(b / k, (b + 1) / k)
                     z = np.random.uniform(c / k, (c + 1) / k)
                     d = math.floor(k * H(x, y, z))
-                    #d = min(d, (k-1))
                     X[d] += 1
 
                 if deturm:
@@ -52,42 +43,83 @@ def colcheck(prob, x, P):
         i += 1
     return i
 
-######## Correction for wind and slope ####################
-def coor(arr, t, i, j):
-    windarr = ...
-    slopearr = ...
+@jit(nopython = True)
+def wind(arr, xwind, ywind, m, n):
+    #x dir
+    if xwind[m, n] > 0:
+        x = (arr[m, n] - arr[m, n - 1])
+    else:
+        x = (arr[m, n + 1] - arr[m, n])
 
-    windconst = ...
-    slopeconst = ...
+    #y dir
+    if ywind[m, n] > 0:
+        y = (arr[m + 1, n] - arr[m, n])
+    else:
+        y = (arr[m, n] - arr[m - 1, n])
 
-    step = var.delx
+    x = x * p.wfac * xwind[m, n]
+    y = - y * p.wfac * ywind[m, n]
 
-    wind = 1/2 * windconst * windarr[t, i, j] * ((arr[t, i, j] - arr[t, i - 1, j]) / step + (arr[t, i, j] - arr[t, i, j - 1]) / step)
-    slope = 1/2 * slopeconst * slopearr[t, i, j] * ((arr[t, i + 1, j] - arr[t, i, j]) / step + (arr[t, i, j] - arr[t, i, j - 1]) / step)
+    return - 1/2 * (p.delt / p.delx) * (x + y)
 
-    return wind + slope
+@jit(nopython = True)
+def slope(arr, xslp, yslp, m, n):
+    #x dir
+    if xslp[m, n] > 0:
+        x = (arr[m, n] - arr[m, n-1])
+    else:
+        x = (arr[m, n + 1] - arr[m, n])
 
-######## Returns completed CA for all time steps (2D) ##############
-@jit(nopython=True)
-def update(arr, deturm, P, k, coor):
-    # loop for time steps
-    # time steps
-    t, n, m = arr.shape
-    for ell in range(1, t):
+    #y dir
+    if yslp[m, n] > 0:
+        y = (arr[m + 1, n] - arr[m, n])
+    else:
+        y = (arr[m, n] - arr[m - 1, n])
 
-        for i in range(1, n - 1):
-            for j in range(1, m - 1):
-                alpha = int(arr[ell - 1, i - 1, j] * k ** 2 + arr[ell - 1, i, j] * k + arr[ell - 1, (i + 1) % n, j])
-                beta = int(arr[ell - 1, i, j - 1] * k ** 2 + arr[ell - 1, i, j] * k + arr[ell - 1, i, (j + 1) % m])
-                if deturm:
-                    arr[ell, i, j] = 1/2 * (P[alpha, 0] + P[beta, 0]) #+ coor(arr, t, i, j)
+    x = x * p.sfac * xslp[m, n]
+    y = - y * p.sfac * yslp[m, n]
+
+    return - 1/2 * (p.delt / p.delx) * (x + y)
+
+@jit(nopython = True)
+def update2D(arr, deturm, P, k, windarr, slparr):
+    #loop for time steps
+    t, m, n = arr.shape
+
+    for time in range(1, t):
+        for j in range(1, m-1):
+            for ell in range(1, n-1):
+                if time % 4 == 0:
+                    alpha = int(arr[time - 1, j, ell - 1] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j, ell + 1])
+                    beta = int(arr[time - 1, j - 1, ell] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j + 1, ell])
+                elif time % 4 == 1:
+                    alpha = int(arr[time - 1, j, ell + 1] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j, ell - 1])
+                    beta = int(arr[time - 1, j - 1, ell] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j + 1, ell])
+                elif time % 4 == 2:
+                    alpha = int(arr[time - 1, j, ell + 1] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j, ell - 1])
+                    beta = int(arr[time - 1, j + 1, ell] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j - 1, ell])
                 else:
-                    prob = random.random()
-                    arr[ell, j, ell] = 1/2 * (colcheck(prob, alpha, P) + colcheck(prob, beta, P)) #+ coor(arr, t, i, j)
-            # loop for array width (set up with derilect BC)
-            arr[ell, 0, :] = arr[0, 0, :]
-            arr[ell, -1, :] = arr[0, -1, :]
-            arr[ell, :, 0] = arr[0, :, 0]
-            arr[ell, :, -1] = arr[0, :, -1]
+                    alpha = int(arr[time - 1, j, ell - 1] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j, ell + 1])
+                    beta = int(arr[time - 1, j + 1, ell] * k ** 2 + arr[time - 1, j, ell] * k + arr[time - 1, j - 1, ell])
 
-    return arr
+                if deturm:
+                    arr[ell, j] = 1/2 * (P[alpha, 0] + P[beta, 0])
+                else:
+                    prob1 = random.random()
+                    prob2 = random.random()
+
+                    arr[time, j, ell] = np.ceil(1/2 * (colcheck(prob1, alpha, P) + colcheck(prob2, beta, P)))
+
+                    #wind and slope
+                    windcor = wind(arr[time - 1, :, :], windarr[:, :, 0], windarr[:, :, 1], j, ell)
+                    slopecor = slope(arr[time - 1, :, :], slparr[:, :, 0], slparr[:, :, 1], j, ell)
+                    arr[time, j, ell] = round(arr[time, j, ell] + windcor + slopecor)
+                    arr[time, j, ell] = max(min(arr[time, j, ell], k - 1), 0)
+
+        # loop for array width (set up with neuman BC)
+        arr[time, 0, :] = arr[0, 0, :]
+        arr[time, -1, :] = arr[0, -1, :]
+        arr[time, :, 0] = arr[0, :, 0]
+        arr[time, :, -1] = arr[0, :, -1]
+
+    return  arr

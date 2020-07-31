@@ -1,26 +1,26 @@
-from CA_Spreading import Transition_Mat as mat
-from Control import Parameters as p
-import numpy as np
+deturm = False  #Determanistic CA?
+savedmat = False
+k = 20        #Number of states of CA
 
-deturm = False
-saveloc = p.saveloc + 'CA Outputs'
-
-#stability check
-check1 = (p.delx ** 2) / (2 * p.vee + p.kapa * (p.delx ** 2))
-print('del t: ' + str(p.delt) + ' < ' + str(check1))
-
-#Data holding array
-arr = np.zeros((p.t, p.n, p.m))
-
-print('Making probability transition matrix')
-
-if deturm:
-    pmat = np.genfromtxt(saveloc, delimiter=',')
-else:
-    pmat = mat.Pmaker(p.k, deturm, p.ell, mat.H)
+L = 10000        #Number of Trials to make transition matrix
 
 
-print('running CA')
+delx = 1      #CA variables
+delt = 1
+vee = 0.05      #spreading factor
+gamma = 0.05        #growth factor
 
-arr = mat.update(arr, deturm, pmat, p.k, 0)
-print(arr)
+
+n = 100         #size of array
+m = 100
+t = 1000
+
+wfac = 0.5
+sfac = 0
+
+#date for wind data
+dates = ['2019-12-21', '2019-12-22', '2019-12-23', '2019-12-24', '2019-12-25', '2019-12-26', '2019-12-27']
+times = ['00:00', '12:00']
+
+#Vis parameters
+tts = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200]
