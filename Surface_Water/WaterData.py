@@ -5,7 +5,7 @@ from Mapping_Tools import LatLongTools as llt
 from Mapping_Tools import RasterConvert as rc
 
 #Exports the surface water in a given square to a given resolution
-def Surface_Water(loc, coord1, coord2, xsize, ysize, dumploc, savename):
+def Surface_Water(loc, coord1, coord2, xsize, ysize, dumploc):
 
     #constants
     seasonal = 1    #number of months/year water is present
@@ -43,10 +43,11 @@ def Surface_Water(loc, coord1, coord2, xsize, ysize, dumploc, savename):
                 else:
                     elemat[i, j] = 1
 
-    savespot = dumploc + '\\' + savename
-    #Produce raster
-    rc.Convert2tif(elemat, savespot, coord1, coord2, xsize, ysize, False)
+    savespot = dumploc + '\\' + 'WaterData'
+    #Produce raster or return array
+    if dumploc != '':
+        rc.Convert2tif(elemat, savespot, coord1, coord2, xsize, ysize, False)
+    else:
+        return elemat
 
-    #Save resulting boolian array
-    #pd.DataFrame(elemat).to_csv(savespot + '.csv',  header=False, index=False)
     return 0

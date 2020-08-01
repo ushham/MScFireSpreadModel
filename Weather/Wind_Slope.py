@@ -16,42 +16,50 @@ def tau(theta, hf):
 def SlopeWind(slope, wind, delh, res, bool):
     lowerlim = 0    #Wind cannot be less than 0
     upperlim = Parameters.upperwindlim * wind   #% increase allowed
-    #2d array of slope and 1 d array of wind at same resolution, true = u, false = v
+    #Expects 2d array of slope and 2d array of wind at same resolution. true = u, false = v
 
     #delh - hill length - grid resolution:
     ell = delh * Parameters.windhill
     hillfact = res / ell
 
     outarr = np.zeros(slope.shape)
-    if bool:
-        #u direction (by column)
-        if wind > 0: #Westerly wind (left to right)
-            rng = range(0, slope.shape[1])
+
+    #to make range directions uniform, make v wind negitive (positive wind blows south)
+    #Also set dimention
+
+    if not(bool):
+        wind = -wind
+        dim = 1
+    else:
+        dim = 0
+
+    #take wind direction at left (u), top (v) of the wind array for each row/column to check
+    #controlling wind direction
+    for i in range(slope.shape[dim]):
+        if bool:
+            startwin = wind[i, 0]
+        else:
+            startwin = wind[0, i]
+
+        if startwin > 0:  #wind going left to right
+            rng = range(0, slope.shape[1 - dim])
             side = - 1
         else:
-            rng = range(slope.shape[1] - 1, -1, -1)
+            rng = range(slope.shape[1 - dim] - 1, -1, -1)
             side = 1
-        for j in range(slope.shape[0]):
-            for i in rng:
+
+
+        for j in rng:
+            if bool:
+                if i == rng[0]:
+                    outarr[i, j] = wind * tau(slope[i, j], hillfact)
+                else:
+                    outarr[i, j] = outarr[i, j + side] * tau(slope[i, j], hillfact)
+            else:
                 if i == rng[0]:
                     outarr[j, i] = wind * tau(slope[j, i], hillfact)
                 else:
-                    outarr[j, i] = outarr[j, i + side] * tau(slope[j, i], hillfact)
-
-    else:
-        # v direction (by row)
-        if wind < 0:  # Northly wind (top to bottom)
-            rng = range(0, slope.shape[0])
-            side = -1
-        else:
-            rng = range(slope.shape[0] - 1, -1, -1)
-            side = 1
-        for j in range(slope.shape[1]):
-            for i in rng:
-                if i == rng[0]:
-                    outarr[i, j] = wind * tau(slope[j, i], hillfact)
-                else:
-                    outarr[i, j] = outarr[i + side, j] * tau(slope[i, j], hillfact)
+                    outarr[j, i] = outarr[i + side, j] * tau(slope[j, i], hillfact)
 
     return outarr
 

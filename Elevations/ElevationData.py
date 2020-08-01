@@ -108,17 +108,11 @@ def ElevationSlope(loc, coord1, coord2, xsize, ysize, dumploc, savename):
                 abc = np.array(np.linalg.solve(slopmat, sol))
                 yslope[j, i] = (2 * abc[0] + abc[1])
 
-
-    savespotx = dumploc + '\\xslope.csv'
-    savespoty = dumploc + '\\yslope.csv'
-    np.savetxt(savespotx, xslope, delimiter=',')
-    np.savetxt(savespoty, yslope, delimiter=',')
-    return delh
-
-
-
-coord2 = (39.651237, -121.403610)
-coord1 = (39.737094, -121.543857)
-loc = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Altitudes\US\GMTED2010 Data\FID25-NW USA\30N150W_20101117_gmted_mea075.tif"
-fold = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Altitudes\US\GMTED2010 Data\FID25-NW USA"
-ElevationSlope(loc, coord1, coord2, 100, 100, fold, "poetest")
+    if savename != '':
+        savespotx = dumploc + '\\xslope.csv'
+        savespoty = dumploc + '\\yslope.csv'
+        np.savetxt(savespotx, xslope, delimiter=',')
+        np.savetxt(savespoty, yslope, delimiter=',')
+        return delh
+    else:
+        return xslope, yslope, delh
