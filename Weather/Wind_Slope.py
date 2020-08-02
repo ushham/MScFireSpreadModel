@@ -62,14 +62,3 @@ def SlopeWind(slope, wind, delh, res, bool):
                     outarr[j, i] = outarr[i + side, j] * tau(slope[j, i], hillfact)
 
     return outarr
-
-fileloc = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Altitudes\US\GMTED2010 Data\FID25-NW USA\yslope.csv"
-u = -1.3992767
-v = -2.41806
-inp = np.genfromtxt(fileloc, delimiter=',')
-yres = 119.921
-xres = 95.468
-
-uwind = SlopeWind(inp, v, 697, yres, False)
-saveloc = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Poe Fire\vwindslope.csv"
-np.savetxt(saveloc, uwind, delimiter=',')

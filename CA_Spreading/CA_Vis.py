@@ -1,9 +1,15 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
 from matplotlib.animation import FuncAnimation
+from matplotlib import animation
 
-def HeatMap(arr, k):
+def HeatMap(arr, background, k, save):
     figure = plt.figure()
+
+    #include background in image
+    if background.any() != None:
+        for i in range(arr.shape[0]):
+            arr[i, :, :] += background
 
     ca_plot = plt.imshow(arr[0, :, :], cmap='seismic', interpolation='bilinear', vmin=0, vmax=(k - 1))
     plt.colorbar(ca_plot)
@@ -18,7 +24,11 @@ def HeatMap(arr, k):
 
 
 
-    animation = FuncAnimation(figure, animation_func, interval=1000)
+    ani = FuncAnimation(figure, animation_func, interval=1000, save_count=arr.shape[0])
     mng = plt.get_current_fig_manager()
     mng.window.showMaximized()
-    plt.show()
+    if save != None:
+        writer = animation.FFMpegWriter(fps=30)
+        ani.save(save + ".mp4", writer=writer)
+    else:
+        plt.show()

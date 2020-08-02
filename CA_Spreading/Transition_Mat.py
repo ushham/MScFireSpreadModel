@@ -82,7 +82,7 @@ def slope(arr, xslp, yslp, m, n):
     return - 1/2 * (p.delt / p.delx) * (x + y)
 
 @jit(nopython = True)
-def update2D(arr, deturm, P, k, windarr, slparr):
+def update2D(arr, deturm, P, k, windarr, slparr, fbrk):
     #loop for time steps
     t, m, n = arr.shape
 
@@ -115,6 +115,10 @@ def update2D(arr, deturm, P, k, windarr, slparr):
                     slopecor = slope(arr[time - 1, :, :], slparr[:, :, 0], slparr[:, :, 1], j, ell)
                     arr[time, j, ell] = round(arr[time, j, ell] + windcor + slopecor)
                     arr[time, j, ell] = max(min(arr[time, j, ell], k - 1), 0)
+
+                    #Apply fire breaks
+                    if fbrk != None:
+                        arr[time, j, ell] = fbrk[j, ell] * arr[time, j, ell]
 
         # loop for array width (set up with neuman BC)
         arr[time, 0, :] = arr[0, 0, :]

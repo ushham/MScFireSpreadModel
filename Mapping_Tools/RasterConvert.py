@@ -41,9 +41,8 @@ def Convert2tif(inputfile, dumploc, coord1, coord2, xsize, ysize, boolian):
     output_raster.FlushCache()
     return 0
 
+def readrst(loc):
+    ds = gdal.Open(loc + ".tif")
+    myarray = np.array(ds.GetRasterBand(1).ReadAsArray())
 
-loc = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Poe Fire\WindMagnitude.csv"
-dum = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Poe Fire\windmag"
-coord2 = (39.651237, -121.403610)
-coord1 = (39.737094, -121.543857)
-Convert2tif(loc, dum, coord1, coord2, 100, 100, True)
+    return myarray
