@@ -40,5 +40,3 @@ wethloc = p.weatherfolder + '\\' + p.weatherfile
 
 reppday = 1
 wnd.WindDat(wethloc, saveloc, p.dt, len(datesin), p.hrspace / reppday, p.startcoords, coord1, coord2, xsize, ysize)
-
-#Produce Wind/Slope

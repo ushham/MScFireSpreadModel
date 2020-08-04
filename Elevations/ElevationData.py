@@ -22,6 +22,7 @@ def InturpEle(data, xsiz, ysiz):
     return output
 
 def Elevation(loc, coord1, coord2, xsize, ysize, dumploc, savename):
+    print('Calculating Elevations')
     #coordinates
     left = coord1[1]
     right = coord2[1]
@@ -43,7 +44,7 @@ def Elevation(loc, coord1, coord2, xsize, ysize, dumploc, savename):
 
     savespot = dumploc + '\\' + savename
     # Output Elevation as Raster
-
+    print('Saving Elevations')
     rc.Convert2tif(output, savespot, coord1, coord2, xsize, ysize, False)
     #Output elevation results
     np.savetxt(savespot + 'csv', output, delimiter=',')
@@ -115,4 +116,4 @@ def ElevationSlope(loc, coord1, coord2, xsize, ysize, dumploc, savename):
         np.savetxt(savespoty, yslope, delimiter=',')
         return delh
     else:
-        return xslope, yslope, delh
+        return delh

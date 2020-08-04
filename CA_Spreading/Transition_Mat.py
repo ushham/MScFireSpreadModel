@@ -4,6 +4,11 @@ from numba import jit
 import random
 from CA_Spreading import CA_Definition as p
 
+#Parameters
+hour2min = 60
+day2hour = 24
+
+
 ############## Make Transition Matrix ############
 @jit(nopython = True)
 def Pmaker(k, deturm, L, H):
@@ -82,11 +87,15 @@ def slope(arr, xslp, yslp, m, n):
     return - 1/2 * (p.delt / p.delx) * (x + y)
 
 @jit(nopython = True)
-def update2D(arr, deturm, P, k, windarr, slparr, fbrk):
+def update2D(arr, deturm, P, k, windarru, windarrv, slparrx, slparry, fbrk, hr):
     #loop for time steps
     t, m, n = arr.shape
 
+    #calculate no. time steps betweek weather changes
+    wetchn = hr * hour2min
+
     for time in range(1, t):
+        wetnum = time // wetchn
         for j in range(1, m-1):
             for ell in range(1, n-1):
                 if time % 4 == 0:
@@ -111,8 +120,8 @@ def update2D(arr, deturm, P, k, windarr, slparr, fbrk):
                     arr[time, j, ell] = np.ceil(1/2 * (colcheck(prob1, alpha, P) + colcheck(prob2, beta, P)))
 
                     #wind and slope
-                    windcor = wind(arr[time - 1, :, :], windarr[:, :, 0], windarr[:, :, 1], j, ell)
-                    slopecor = slope(arr[time - 1, :, :], slparr[:, :, 0], slparr[:, :, 1], j, ell)
+                    windcor = wind(arr[time - 1, :, :], windarru[wetnum, :, :], windarrv[wetnum, :, :], j, ell)
+                    slopecor = slope(arr[time - 1, :, :], slparrx, slparry, j, ell)
                     arr[time, j, ell] = round(arr[time, j, ell] + windcor + slopecor)
                     arr[time, j, ell] = max(min(arr[time, j, ell], k - 1), 0)
 

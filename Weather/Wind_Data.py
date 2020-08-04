@@ -15,6 +15,7 @@ def WindDat(fileloc, dumploc, dt, coordstart, coord1, coord2, xres, yres, save):
     dely = int((abs(round(coord1[0] * near) / near - round(coord2[0] * near) / near)) / resolution) + 1
 
     #Extract 10m u and v components of wind from GRIB
+    print('Extracting GRIB')
     u = ge.GribExt(fileloc, coordstart, coord1, dt, '10U', delx, dely)
     v = ge.GribExt(fileloc, coordstart, coord1, dt, '10V', delx, dely)
 
@@ -22,6 +23,7 @@ def WindDat(fileloc, dumploc, dt, coordstart, coord1, coord2, xres, yres, save):
     uout = np.zeros((xres, yres))
     vout = np.zeros((xres, yres))
 
+    print('Reshaping GRIB')
     for x in range(xres):
         #round to nearest grid
         xloc = coord1[1] + x * abs(coord1[1] - coord2[1]) / xres

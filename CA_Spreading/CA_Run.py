@@ -6,9 +6,11 @@ from Mapping_Tools import RasterConvert as rc
 from CA_Spreading import Transition_Mat as tm
 from CA_Spreading import CA_Vis as vs
 from CA_Spreading import CA_Data as cd
-import os
+from Control import Parameters as pm
 
 cd.RunData()
+print('DataGrab Complete')
+
 
 start = time.time()
 #stability check
@@ -24,14 +26,23 @@ def H(x, y, z):
     n = y + K * (x - 2 * y + z) + p.delt * p.gamma * y * (1 - y)
     return n
 
-wind = np.zeros((p.m, p.n, 2))
+
+#Wind Data Read in
+winnum = len(pm.times) * len(pm.datesin)
+windu = np.zeros((winnum, p.m, p.n))
+windv = np.zeros((winnum, p.m, p.n))
 if p.wthuse:   #check if there is weather data to extract
-    wind[:, :, 1] = -1
+    for i in range(winnum):
+        windu[i, :, :] = rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-u")
+        windv[i, :, :] = rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-v")
+
 
 #check if there is elevation data
 slp = np.zeros((p.m, p.n, 2))
 if p.eleuse:
-    slp = -1
+    slpx = np.genfromtxt(pm.saveloc + "\\" + "xslope.csv", delimiter=",")
+    slpy = np.genfromtxt(pm.saveloc + "\\" + "yslope.csv", delimiter=",")
+
 
 #check if to use fire break:
 if p.brkuse:
@@ -40,14 +51,14 @@ else:
     fbrk = None
 
 
-print(fbrk)
 arr = np.zeros((p.t, p.m, p.n))
 arr[0, 230:240, 120:130] = ini
 
 P = tm.Pmaker(p.k, p.deturm, p.L, H)
 
-print('running CA')
-arr = tm.update2D(arr, p.deturm, P, p.k, wind, slp, fbrk)
+print('Running CA')
+hrsp = 24 // len(pm.times)
+arr = tm.update2D(arr, p.deturm, P, p.k, windu, windv, slpx, slpy, fbrk, hrsp)
 
 arrshow = np.empty((len(p.tts), p.m, p.n))
 
@@ -56,7 +67,5 @@ icount = 0
 #     arrshow[icount, :, :] = arr[i, :, :]
 #     icount += 1
 
-
+print("Making Animation")
 vs.HeatMap(arr, fbrk, p.k, cd.anisav)
-
-
