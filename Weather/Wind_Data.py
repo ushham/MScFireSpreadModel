@@ -3,51 +3,63 @@ from Weather import Grib_Ext as ge
 import numpy as np
 from Mapping_Tools import RasterConvert as rc
 
-#reads in dates and times and produces wind array of area
-def WindDat(fileloc, dumploc, dt, coordstart, coord1, coord2, xres, yres, save):
-    #boolian true/false for save to tif file or return as array
+class WindData:
+    def __init__(self, fileloc, dumploc, dt, coordstart, coord1, coord2, xres, yres):
+        self.fileloc = fileloc
+        self.saveloc = dumploc
+        self.time = dt
+        self.coord0 = coordstart
+        self.top_left = coord1
+        self.bot_right = coord2
+        self.xres = xres
+        self.yres = yres
+        self.res = ge.res
 
-    resolution = ge.res
-    near = 1 / resolution
+    # calculate number of grib coords to extract
+    def delx(self):
+        return int((abs(round(self.top_left[1] * 1 / self.res) / (1 / self.res) - round(self.bot_right[1] * 1 / self.res) / (1 / self.res))) / self.res) + 1
 
-    #calculate number of grib coords to extract
-    delx = int((abs(round(coord1[1] * near) / near - round(coord2[1] * near) / near)) / resolution) + 1
-    dely = int((abs(round(coord1[0] * near) / near - round(coord2[0] * near) / near)) / resolution) + 1
+    def dely(self):
+        return int((abs(round(self.top_left[0] * 1 / self.res) / (1 / self.res) - round(self.bot_right[0] * 1 / self.res) / (1 / self.res))) / self.res) + 1
 
-    #Extract 10m u and v components of wind from GRIB
-    print('Extracting GRIB')
-    u = ge.GribExt(fileloc, coordstart, coord1, dt, '10U', delx, dely)
-    v = ge.GribExt(fileloc, coordstart, coord1, dt, '10V', delx, dely)
+    #reads in dates and times and produces wind array of area
+    def Extract_Data(self):
+        dx = self.delx()
+        dy = self.dely()
+        #Extract 10m u and v components of wind from GRIB
+        print('Extracting GRIB')
+        u = ge.GribExt(self.fileloc, self.coord0, self.top_left, self.time, '10U', dx, dy)
+        v = ge.GribExt(self.fileloc, self.coord0, self.top_left, self.time, '10UV', dx, dy)
 
-    ######convert small array to big array######
-    uout = np.zeros((xres, yres))
-    vout = np.zeros((xres, yres))
+        ######convert small array to big array######
+        uout = np.zeros((dx, dy))
+        vout = np.zeros((dx, dy))
 
-    print('Reshaping GRIB')
-    for x in range(xres):
-        #round to nearest grid
-        xloc = coord1[1] + x * abs(coord1[1] - coord2[1]) / xres
-        xloc = round(xloc * near) / near
-        for y in range(yres):
-            yloc = coord1[0] + y * abs(coord1[0] - coord2[0]) / xres
-            yloc = round(yloc * near) / near
+        print('Reshaping GRIB')
+        for x in range(dx):
+            #round to nearest grid
+            xloc = self.top_left[1] + x * abs(self.top_left[1] - self.bot_right[1]) / dx
+            xloc = round(xloc * 1 / self.res) / (1 / self.res)
+            for y in range(dy):
+                yloc = self.top_left[0] + y * abs(self.top_left[0] - self.bot_right[0]) / dx
+                yloc = round(yloc * 1 / self.res) / (1 / self.res)
 
-            x1 = int(abs(xloc - coord1[1]) / resolution)
-            y1 = int(abs(yloc - coord1[0]) / resolution)
+                x1 = int(abs(xloc - self.top_left[1]) / self.res)
+                y1 = int(abs(yloc - self.top_left[0]) / self.res)
 
-            uout[x, y] = u[x1, y1]
-            vout[x, y] = v[x1, y1]
+                uout[x, y] = u[x1, y1]
+                vout[x, y] = v[x1, y1]
 
-    #print out array
-    hourout = str(dt.hour)
-    dayout = str(dt.day)
+        #print out array
+        hourout = str(self.time.hour)
+        dayout = str(self.time.day)
 
-    if save:
-        saveloc = dumploc + '\\' + dayout + '-' + hourout
+        if self.save:
+            saveloc = self.fileloc + '\\' + dayout + '-' + hourout
 
-        ######Convert to tif files
-        rc.Convert2tif(uout, saveloc + 'u', coord1, coord2, xres, yres, False)
-        rc.Convert2tif(vout, saveloc + 'v', coord1, coord2, xres, yres, False)
-    else:
-        return uout, vout
-    return 0
+            ######Convert to tif files
+            rc.Convert2tif(uout, saveloc + 'u', self.top_left, self.bot_right, dx, dy, False)
+            rc.Convert2tif(vout, saveloc + 'v', self.top_left, self.bot_right, dx, dy, False)
+        else:
+            return uout, vout
+        return 0

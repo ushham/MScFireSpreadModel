@@ -22,17 +22,20 @@ llt.PrintLatLong(saveloc, coord1, coord2, xsize, ysize)
 #Extract Elevation Data
 print('Extracting Elevation Data')
 eleloc = p.elefolder + '\\' + p.elefile
-ed.ElevationSlope(eleloc, coord1, coord2, xsize, ysize, saveloc, 'ElevationData')
+elevation = ed.Elevation(eleloc, coord1, coord2, xsize, ysize, saveloc, 'ElevationData')
+delh = elevation.Extract_Data
 
 #Extract Surface Water Data
 print('Extracting Surface Water Data')
 watloc = p.waterfolder + '\\' + p.waterfile
-wd.Surface_Water(watloc, coord1, coord2, xsize, ysize, saveloc)
+water = wd.SurfaceWater(watloc, coord1, coord2, xsize, ysize, saveloc)
+w = water.Extract_Data
 
 #Extract Fire Data
 print('Extracting Fire Data')
 fireloc = p.firefolder + '\\' + p.firefile
-fd.IterateFire(fireloc, saveloc + '\\FireData', p.hrspace, datesin, coord1, coord2, xsize, ysize)
+fire = fd.FireLayers(fireloc, coord1, coord2, saveloc, p.hrspace, datesin, xsize, ysize)
+f = fire.Extract_Data
 
 #Extract Wind Data
 print('Extracting Wind Data')
@@ -40,3 +43,4 @@ wethloc = p.weatherfolder + '\\' + p.weatherfile
 
 reppday = 1
 wnd.WindDat(wethloc, saveloc, p.dt, len(datesin), p.hrspace / reppday, p.startcoords, coord1, coord2, xsize, ysize)
+wind = wnd.WindData(wethloc, saveloc, p.dt, p.startcoords, coord1, coord2, xsize, ysize)

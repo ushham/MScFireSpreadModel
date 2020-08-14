@@ -33,6 +33,7 @@ def Coord2Dist(delx, dely, lat):
     ydelta = (dely / deg) * np.sin(tau / 4 - abs(lat) * tau / deg) * erad * tau
     return xdelta, ydelta
 
+
 def PrintLatLong(dumploc, coord1, coord2, xres, yres):
     delx = abs(coord1[1] - coord2[1]) / xres
     dely = abs(coord1[0] - coord2[0]) / yres

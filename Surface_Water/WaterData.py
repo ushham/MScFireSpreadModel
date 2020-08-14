@@ -4,50 +4,56 @@ import numpy as np
 from Mapping_Tools import LatLongTools as llt
 from Mapping_Tools import RasterConvert as rc
 
-#Exports the surface water in a given square to a given resolution
-def Surface_Water(loc, coord1, coord2, xsize, ysize, dumploc):
+class SurfaceWater:
+    def __init__(self, loc, coord1, coord2, xsize, ysize, dumploc):
+        self.loc = loc
+        self.top_left = coord1
+        self.bot_right = coord2
+        self.xres = xsize
+        self.yres = ysize
+        self.saveloc = dumploc
+        self.season = 1 #number of months/year water is present
 
-    #constants
-    seasonal = 1    #number of months/year water is present
+    # Coordinate Locations functions
+    def xCoord(self, i):
+        return self.top_left[1] + i * abs(self.top_left[1] - self.bot_right[1]) / self.xres
 
-    #x and y delta as angles
-    delx = abs(coord1[0]-coord2[0]) / xsize
-    dely = abs(coord1[1]-coord2[1]) / ysize
+    def yCoord(self, i):
+        return self.top_left[0] - i * abs(self.top_left[0] - self.bot_right[0]) / self.yres
 
-    #distance of each box in KM
-    xdelta, ydelta = llt.Coord2Dist(delx, dely, coord1[0])
+    #Exports the surface water in a given square to a given resolution
+    def Extract_Data(self):
+        #x and y delta as angles
+        delx = abs(self.top_left[0] - self.bot_right[0]) / self.xres
+        dely = abs(self.top_left[1] - self.bot_right[1]) / self.yres
 
-    #size of boxes in m
-    print(str(xdelta * 1000) + 'm - xbox')
-    print(str(ydelta * 1000) + 'm - ybox')
+        #distance of each box in KM
+        xdelta, ydelta = llt.Coord2Dist(delx, dely, self.top_left[0])
 
-    #make matrix of coords
-    elemat = np.zeros((ysize, xsize))
+        #size of boxes in m
+        print(str(xdelta * 1000) + 'm - xbox')
+        print(str(ydelta * 1000) + 'm - ybox')
 
-    #Coordinate Locations functions
-    def xCoord(i):
-        return coord1[1] + i * abs(coord1[1] - coord2[1]) / xsize
-    def yCoord(i):
-        return coord1[0] - i * abs(coord1[0] - coord2[0]) / ysize
+        #make matrix of coords
+        elemat = np.zeros((self.yres, self.xres))
+        eledata = rs.open(self.loc)
 
-    eledata = rs.open(loc)
+        #Search each box location for water
+        for i in range(self.yres):
+            for j in range(self.xres):
+                coord = (self.xCoord(j), self.yCoord(i))
+                for val in eledata.sample([coord]):
+                    if val[0] > self.season:
+                        #if there is water we remove it
+                        elemat[i, j] = 0
+                    else:
+                        elemat[i, j] = 1
 
-    #Search each box location for water
-    for i in range(ysize):
-        for j in range(xsize):
-            coord = (xCoord(j), yCoord(i))
-            for val in eledata.sample([coord]):
-                if val[0] > seasonal:
-                    #if there is water we remove it
-                    elemat[i, j] = 0
-                else:
-                    elemat[i, j] = 1
+        savespot = self.saveloc + '\\' + 'WaterData'
+        #Produce raster or return array
+        if self.saveloc != '':
+            rc.Convert2tif(elemat, savespot, self.top_left, self.bot_right, self.xres, self.yres, False)
+        else:
+            return elemat
 
-    savespot = dumploc + '\\' + 'WaterData'
-    #Produce raster or return array
-    if dumploc != '':
-        rc.Convert2tif(elemat, savespot, coord1, coord2, xsize, ysize, False)
-    else:
-        return elemat
-
-    return 0
+        return 0

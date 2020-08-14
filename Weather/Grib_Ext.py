@@ -5,43 +5,56 @@ import numpy as np
 
 #GRIB Constants
 #resolution of GRIB files in degrees
-res = 0.25
 
-#Data Labels
-timelabel = 'GRIB_REF_TIME'
-elementlabel = 'GRIB_ELEMENT'
+class GribExtract:
+    def  __init__(self, fileloc, coordstart, coord1, datet, ele, nx, ny):
+        self.res = 0.25
+        self.fileloc = fileloc
+        self.coord0 = coordstart
+        self.top_left = coord1
+        self.time = datet
+        self.mat = ele
+        self.xres = nx
+        self.yres = ny
 
-def GribExt(fileloc, coordstart, coord1, datet, ele, nx, ny):
-    #Open file
-    resinv = 1 / res
-    dataset = gdal.Open(fileloc, gdal.GA_ReadOnly)
-    message_count = dataset.RasterCount
-    unixtime = datetime.timestamp(datet)
+        #Data Labels
+        self.timelabel = 'GRIB_REF_TIME'
+        self.elementlabel = 'GRIB_ELEMENT'
 
-    out = None
-    for i in range(1, message_count):
-        #Extract data from GRIB
-        message = dataset.GetRasterBand(i).GetMetadata()
-        #extract time
-        timeband = message[timelabel]
-        timeband = timeband.split()
-        #extract element label
-        type = message[elementlabel]
-
-        if int(timeband[0]) == unixtime and type == ele:
-            out = np.zeros((nx, ny))
-            for x in range(nx):
-                for y in range(ny):
-                    coordy = round(((coordstart[0] - coord1[0]) - res * y) * resinv) / resinv
-                    coordx = round(((coord1[1] - coordstart[1]) + res * x) * resinv) / resinv
+    def CoordX(self, x):
+        coordx = round(((self.top_left[1] - self.coord0[1]) + self.res * x) * (1 / self.res)) / (1 / self.res)
+        coordx = int(coordx / self.res)
+        return coordx
 
 
+    def CoordY(self, y):
+        coordy = round(((self.coord0[0] - self.top_left[0]) - self.res * y) * (1 / self.res)) / (1 / self.res)
+        coordy = int(coordy / self.res)
+        return coordy
 
-                    coordx = int(coordx / res)
-                    coordy = int(coordy / res)
 
-                    out[x, y] = dataset.GetRasterBand(i).ReadAsArray()[coordy, coordx]
+    def GribExt(self):
+        #Open file
+        dataset = gdal.Open(self.fileloc, gdal.GA_ReadOnly)
+        message_count = dataset.RasterCount
+        unixtime = datetime.timestamp(self.time)
 
-    return out
+        out = None
+        for i in range(1, message_count):
+            #Extract data from GRIB
+            message = dataset.GetRasterBand(i).GetMetadata()
+            #extract time
+            timeband = message[self.timelabel]
+            timeband = timeband.split()
+            #extract element label
+            type = message[self.elementlabel]
+
+            if int(timeband[0]) == unixtime and type == self.ele:
+                out = np.zeros((self.xres, self.yres))
+                for x in range(self.xres):
+                    for y in range(self.yres):
+                        out[x, y] = dataset.GetRasterBand(i).ReadAsArray()[self.CoordY(y), self.CoordX(x)]
+
+        return out
 
 

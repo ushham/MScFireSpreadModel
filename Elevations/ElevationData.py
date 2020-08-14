@@ -4,116 +4,124 @@ from Mapping_Tools import LatLongTools as llt
 from Mapping_Tools import RasterConvert as rc
 from scipy.interpolate import RegularGridInterpolator as rgi
 
-def InturpEle(data, xsiz, ysiz):
-    #interpolates initial elevation data to be of given size
-    datasize = data.shape
-    yres = (datasize[0] - 1) / ysiz
-    xres = (datasize[1] - 1) / xsiz
-    x, y = np.linspace(0, datasize[1] - 1, datasize[1]), np.linspace(0, datasize[0] - 1, datasize[0])
-    grid = rgi((y, x), data)
+class Elevation:
+    def __init__(self, loc, coord1, coord2, xsize, ysize, dumploc, savename):
+        self.fileloc = loc
+        self.top_left = coord1
+        self.bot_right = coord2
+        self.xres = xsize
+        self.yres = ysize
+        self.saveloc = dumploc
+        self.savename = savename
+        self.save = self.saveloc + "\\" + self.savename
 
-    output = np.empty((ysiz, xsiz))
-    for i in range(ysiz):
-        yloc = i * yres
-        for j in range(xsiz):
-            xloc = j * xres
-            output[i, j] = grid([yloc, xloc])
+    def InturpEle(self, matrix):
+        #interpolates initial elevation data to be of given size
+        datasize = matrix.shape
+        yres = (datasize[0] - 1) / self.yres
+        xres = (datasize[1] - 1) / self.xres
+        x, y = np.linspace(0, datasize[1] - 1, datasize[1]), np.linspace(0, datasize[0] - 1, datasize[0])
+        grid = rgi((y, x), matrix)
 
-    return output
+        output = np.empty((self.yres, self.xres))
+        for i in range(self.yres):
+            yloc = i * yres
+            for j in range(self.xres):
+                xloc = j * xres
+                output[i, j] = grid([yloc, xloc])
 
-def Elevation(loc, coord1, coord2, xsize, ysize, dumploc, savename):
-    print('Calculating Elevations')
-    #coordinates
-    left = coord1[1]
-    right = coord2[1]
-    top = coord1[0]
-    bott = coord2[0]
+        return output
 
-    eledata = rs.open(loc)
+    def Elevation(self):
+        print('Calculating Elevations')
+        #coordinates
+        left = self.top_left[1]
+        right = self.bot_right[1]
+        top = self.top_left[0]
+        bott = self.bot_right[0]
 
-    #index of coordinates
-    row1, col1 = eledata.index(left, top)
-    row2, col2 = eledata.index(right, bott)
-    elearray = eledata.read(1)
+        eledata = rs.open(self.fileloc)
 
-    # make matrix of coords
-    elemat = elearray[row1:(row2 + 1), col1:(col2 + 1)]
+        #index of coordinates
+        row1, col1 = eledata.index(left, top)
+        row2, col2 = eledata.index(right, bott)
+        elearray = eledata.read(1)
 
-    output = InturpEle(elemat, xsize, ysize)
-    delh = np.max(output) - np.min(output)
+        # make matrix of coords
+        elemat = elearray[row1:(row2 + 1), col1:(col2 + 1)]
 
-    savespot = dumploc + '\\' + savename
-    # Output Elevation as Raster
-    print('Saving Elevations')
-    rc.Convert2tif(output, savespot, coord1, coord2, xsize, ysize, False)
-    #Output elevation results
-    np.savetxt(savespot + 'csv', output, delimiter=',')
-    return output, delh
+        output = self.InturpEle(elemat)
+        delh = np.max(output) - np.min(output)
+
+        # Output Elevation as Raster
+        print('Saving Elevations')
+        rc.Convert2tif(output, self.save, self.top_left, self.bot_right, self.xres, self.yres, False)
+        #Output elevation results
+        np.savetxt(self.save + '.csv', output, delimiter=',')
+        return output, delh
+
+    def Extract_Data(self):
+        #Returns x and y directional slopes and elevations at given resolution
+        #constants
+        km2m = 1000
+        quaddim = 3
+
+        #find elevations and box size
+        elemat, delh = self.Elevation
+        # x and y delta as angles
+        delx = abs(self.top_left[0] - self.bot_right[0]) / self.xres
+        dely = abs(self.top_left[1] - self.bot_right[1]) / self.yres
+
+        # distance of each box in KM
+        xdelta, ydelta = llt.Coord2Dist(delx, dely, self.top_left[0])
+        xdelta = km2m * xdelta
+        ydelta = km2m * ydelta
+        print(xdelta, ydelta)
+
+        xslope = np.zeros((self.yres, self.xres))
+        yslope = np.zeros((self.yres, self.xres))
+
+        #Approximate slope using 1st order method at boundaries, 2nd order in interior
+        for i in range(self.xres):
+            for j in range(self.yres):
+                ########### X SLOPE #######
+                if (i == 0):
+                    xslope[j, i] = (elemat[j, i + 1] - elemat[j, i]) / xdelta
+                elif (i == self.xres - 1):
+                    xslope[j, i] = (elemat[j, i] - elemat[j, i - 1]) / xdelta
+                else:
+                    slopmat = np.zeros((quaddim, quaddim))
+                    sol = np.array([elemat[j][i - 1], elemat[j][i], elemat[j][i + 1]])
+                    for k in range(quaddim):
+                        slopmat[k, 0] = (k * xdelta) ** 2
+                        slopmat[k, 1] = (k * xdelta)
+                        slopmat[k, 2] = 1
+
+                    abc = np.array(np.linalg.solve(slopmat, sol))
+                    #first derivative of resulting quadratic
+                    xslope[j, i] = (2 * abc[0] + abc[1])
+
+                #---Y slope---
+                if (j == 0):
+                    yslope[j, i] = (elemat[j + 1, i] - elemat[j, i]) / ydelta
+                elif (j == self.yres - 1):
+                    yslope[j, i] = (elemat[j, i] - elemat[j - 1, i]) / ydelta
+                else:
+                    slopmat = np.zeros((quaddim, quaddim))
+                    sol = np.array([elemat[j - 1][i], elemat[j][i], elemat[j + 1][i]])
+                    for k in range(3):
+                        slopmat[k, 0] = (k * ydelta) ** 2
+                        slopmat[k, 1] = (k * ydelta)
+                        slopmat[k, 2] = 1
+
+                    abc = np.array(np.linalg.solve(slopmat, sol))
+                    yslope[j, i] = (2 * abc[0] + abc[1])
 
 
-
-def ElevationSlope(loc, coord1, coord2, xsize, ysize, dumploc, savename):
-    #Returns x and y directional slopes and elevations at given resolution
-    #constants
-    km2m = 1000
-    quaddim = 3
-
-    #find elevations and box size
-    elemat, delh = Elevation(loc, coord1, coord2, xsize, ysize, dumploc, savename)
-    # x and y delta as angles
-    delx = abs(coord1[0] - coord2[0]) / xsize
-    dely = abs(coord1[1] - coord2[1]) / ysize
-
-    # distance of each box in KM
-    xdelta, ydelta = llt.Coord2Dist(delx, dely, coord1[0])
-    xdelta = km2m * xdelta
-    ydelta = km2m * ydelta
-    print(xdelta, ydelta)
-
-    xslope = np.zeros((ysize, xsize))
-    yslope = np.zeros((ysize, xsize))
-
-    #Approximate slope using 1st order method at boundaries, 2nd order in interior
-    for i in range(xsize):
-        for j in range(ysize):
-            ########### X SLOPE #######
-            if (i == 0):
-                xslope[j, i] = (elemat[j, i + 1] - elemat[j, i]) / xdelta
-            elif (i == xsize - 1):
-                xslope[j, i] = (elemat[j, i] - elemat[j, i - 1]) / xdelta
-            else:
-                slopmat = np.zeros((quaddim, quaddim))
-                sol = np.array([elemat[j][i - 1], elemat[j][i], elemat[j][i + 1]])
-                for k in range(quaddim):
-                    slopmat[k, 0] = (k * xdelta) ** 2
-                    slopmat[k, 1] = (k * xdelta)
-                    slopmat[k, 2] = 1
-
-                abc = np.array(np.linalg.solve(slopmat, sol))
-                #first derivative of resulting quadratic
-                xslope[j, i] = (2 * abc[0] + abc[1])
-
-            #---Y slope---
-            if (j == 0):
-                yslope[j, i] = (elemat[j + 1, i] - elemat[j, i]) / ydelta
-            elif (j == ysize - 1):
-                yslope[j, i] = (elemat[j, i] - elemat[j - 1, i]) / ydelta
-            else:
-                slopmat = np.zeros((quaddim, quaddim))
-                sol = np.array([elemat[j - 1][i], elemat[j][i], elemat[j + 1][i]])
-                for k in range(3):
-                    slopmat[k, 0] = (k * ydelta) ** 2
-                    slopmat[k, 1] = (k * ydelta)
-                    slopmat[k, 2] = 1
-
-                abc = np.array(np.linalg.solve(slopmat, sol))
-                yslope[j, i] = (2 * abc[0] + abc[1])
-
-    if savename != '':
-        savespotx = dumploc + '\\xslope.csv'
-        savespoty = dumploc + '\\yslope.csv'
+        savespotx = self.saveloc + '\\xslope.csv'
+        savespoty = self.saveloc + '\\yslope.csv'
         np.savetxt(savespotx, xslope, delimiter=',')
         np.savetxt(savespoty, yslope, delimiter=',')
         return delh
-    else:
-        return delh
+
+

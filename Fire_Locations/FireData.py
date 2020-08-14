@@ -1,69 +1,118 @@
+import pandas as pd
+import numpy as np
 import geopandas as gpd
 from datetime import datetime
 from datetime import time
 from Fire_Locations import ConvexHull as ch
+from scipy.interpolate import griddata
+from Mapping_Tools import RasterConvert as rc
 
+class FireLayers:
+    def __init__(self, loc, coord1, coord2, dumploc, hrspace, datesin, xsize, ysize):
+        self.day2hour = 24
+        self.firetime = 'ACQ_TIME'
+        self.firedate = 'ACQ_DATE'
+        self.firelat = 'LATITUDE'
+        self.firelong = 'LONGITUDE'
+        self.save = 'FireData'
 
-def HourInt(intervals):
-    #Returns array of times, given the hourly interval
-    day2hour = 24
-    intervals = min(day2hour, intervals)    #max hourly gap is 1 day
+        self.fileloc = loc
+        self.top_left = coord1
+        self.bot_right = coord2
+        self.saveloc = dumploc
+        self.date = datesin
+        self.xres = xsize
+        self.yres = ysize
+        self.interval = hrspace
 
-    numit = int(day2hour / intervals)
-    timeint = []
-    for i in range(numit):
-        timeint.append(time(hour = int(i * day2hour / numit), minute = 0))
-    
-    timeint.append(time(hour = 23, minute = 59))    #end of day is added
-    return timeint
+    def HourInt(self):
+        #Returns array of times, given the hourly interval
+        intervals = min(self.day2hour, self.interval)    #max hourly gap is 1 day
 
+        numit = int(self.day2hour / intervals)
+        timeint = []
+        for i in range(numit):
+            timeint.append(time(hour = int(i * self.day2hour / numit), minute = 0))
 
-def FireLayerExtract(loc, coord1, coord2, dumploc, hours, date, savedata):
-    # Returns file of fire records within given area, on date within time band
-    # constants
-    firetime = 'ACQ_TIME'
-    firedate = 'ACQ_DATE'
-    firelat = 'LATITUDE'
-    firelong = 'LONGITUDE'
+        timeint.append(time(hour = 23, minute = 59))    #end of day is added
+        return timeint
 
-    # Data Input file location
-    firedf = gpd.read_file(loc)
+    def FireLayerExtract(self, time):
+        # Returns file of fire records within given area, on date within time band
+        # Data Input file location
+        firedf = gpd.read_file(self.fileloc)
 
-    # calculates fire times
-    timemin = hours[0]
-    timemax = hours[1]
+        # calculates fire times
+        timemin = time.hour[0]
+        timemax = time.hour[1]
 
-    # filters dataframe for only fires within the location box
-    firedf = firedf[(firedf[firelat] < coord1[0]) & (firedf[firelat] > coord2[0])]
-    firedf = firedf[(firedf[firelong] > coord1[1]) & (firedf[firelong] < coord2[1])]
+        # filters dataframe for only fires within the location box
+        firedf = firedf[(firedf[self.firelat] < self.top_left[0]) & (firedf[self.firelat] > self.bot_right[0])]
+        firedf = firedf[(firedf[self.firelong] > self.top_left[1]) & (firedf[self.firelong] < self.bot_right[1])]
 
-    firedf[firetime] = firedf[firetime].apply(lambda x: datetime.strptime(x, '%H%M')).dt.time
+        firedf[self.firetime] = firedf[self.firetime].apply(lambda x: datetime.strptime(x, '%H%M')).dt.time
 
-    dttemp = firedf[(firedf[firedate] == date)]
-    dttimetemp = dttemp[(dttemp[firetime] >= timemin) & (dttemp[firetime] <= timemax)]
-    if dttimetemp.shape[0] > 0:
-        dttimetemp = dttimetemp.drop([firetime], axis=1)
-        if savedata:
-            saveloc = dumploc + '\\' + str(date) + '-' + str(timemin).zfill(2) + '.csv'
-            dttimetemp.to_csv(saveloc)
+        dttemp = firedf[(firedf[self.firedate] == self.date)]
+        dttimetemp = dttemp[(dttemp[self.firetime] >= timemin) & (dttemp[self.firetime] <= timemax)]
+        if dttimetemp.shape[0] > 0:
+            dttimetemp = dttimetemp.drop([self.firetime], axis=1)
+            if self.save:
+                saveloc = self.dumploc + '\\' + str(self.date) + '-' + str(timemin).zfill(2) + '.csv'
+                dttimetemp.to_csv(saveloc)
+                out = 0
+                run = False
+            else:
+                out = dttimetemp
+                run = True
+        else:
             out = 0
             run = False
+
+        return run, out
+
+    def CreateSurface(self):
+        # Opens file, or expected df to be passed, and returns a sursafe of expected fire based on FRP
+        # Saves a raster of surface
+        # constants
+        lat = 'LATITUDE'
+        long = 'LONGITUDE'
+        conf = 'FRP'
+        min_points = 4
+
+        firedata = self.fileloc
+
+        # set size of arrays
+        points = np.array(firedata[[lat, long]])
+        delx = abs(self.top_left[1] - self.bot_right[1]) / self.xres
+        dely = abs(self.top_left[0] - self.bot_right[0]) / self.yres
+
+        # create evenly spaced array given number of boxes
+        x = np.arange(min(self.top_left[1], self.bot_right[1]), max(self.top_left[1], self.bot_right[1]), delx)
+        y = np.arange(max(self.top_left[0], self.bot_right[0]), min(self.top_left[0], self.bot_right[0]), -dely)
+
+        grid_x, grid_y = np.meshgrid(x, y)
+
+        pointy = points[:, 0]
+        pointx = points[:, 1]
+
+        # create surface
+        # Check if there are enough points to make surface
+        if len(firedata.index) >= min_points:
+            z = griddata((pointx, pointy), firedata[conf], (grid_x, grid_y), method='linear')
+            # Convert surface to raster file
+            rc.Convert2tif(z, self.saveloc, self.top_left, self.bot_right, self.xres, self.yres, False)
         else:
-            out = dttimetemp
-            run = True
-    else:
-        out = 0
-        run = False
+            print('Not enough points at ' + self.dumploc)
+        return 0
 
-    return run, out
-
-def IterateFire(loc, saveloc, hrspace, datesin, coord1, coord2, xsize, ysize):
-    time = HourInt(hrspace)
-    for i in datesin:
-        for j in range(len(time) - 1):
-            timeint = [time[j], time[j+1]]
-            run, firedat = FireLayerExtract(loc, coord1, coord2, saveloc, timeint, i, False)
-            if run:
-                dumploc = saveloc + '\\' + str(i) + '-' + str(time[j])[0:2]
-                print(dumploc)
-                ch.CreateSurface(firedat, '', dumploc, coord1, coord2, xsize, ysize, False)
+    def Extract_Data(self):
+        time = self.HourInt()
+        for i in self.datesin:
+            for j in range(len(time) - 1):
+                timeint = [time[j], time[j+1]]
+                run, firedat = self.FireLayerExtract()
+                if run:
+                    dumploc = self.saveloc + '\\' + str(i) + '-' + str(time[j])[0:2]
+                    print(dumploc)
+                    self.CreateSurface()
+        return 0
