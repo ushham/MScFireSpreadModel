@@ -23,24 +23,26 @@ llt.PrintLatLong(saveloc, coord1, coord2, xsize, ysize)
 print('Extracting Elevation Data')
 eleloc = p.elefolder + '\\' + p.elefile
 elevation = ed.Elevation(eleloc, coord1, coord2, xsize, ysize, saveloc, 'ElevationData')
-delh = elevation.Extract_Data
+#delh = elevation.Extract_Data()
+
+
 
 #Extract Surface Water Data
 print('Extracting Surface Water Data')
 watloc = p.waterfolder + '\\' + p.waterfile
 water = wd.SurfaceWater(watloc, coord1, coord2, xsize, ysize, saveloc)
-w = water.Extract_Data
+#wat = water.Extract_Data()
 
 #Extract Fire Data
 print('Extracting Fire Data')
 fireloc = p.firefolder + '\\' + p.firefile
 fire = fd.FireLayers(fireloc, coord1, coord2, saveloc, p.hrspace, datesin, xsize, ysize)
-f = fire.Extract_Data
+f = fire.Extract_Data()
 
 #Extract Wind Data
 print('Extracting Wind Data')
 wethloc = p.weatherfolder + '\\' + p.weatherfile
 
 reppday = 1
-wnd.WindDat(wethloc, saveloc, p.dt, len(datesin), p.hrspace / reppday, p.startcoords, coord1, coord2, xsize, ysize)
-wind = wnd.WindData(wethloc, saveloc, p.dt, p.startcoords, coord1, coord2, xsize, ysize)
+wind = wnd.WindData(wethloc, saveloc, p.datesin, p.startcoords, coord1, coord2, xsize, ysize)
+win = wind.Extract_Data()

@@ -33,7 +33,7 @@ class GribExtract:
         return coordy
 
 
-    def GribExt(self):
+    def Extract_Data(self):
         #Open file
         dataset = gdal.Open(self.fileloc, gdal.GA_ReadOnly)
         message_count = dataset.RasterCount

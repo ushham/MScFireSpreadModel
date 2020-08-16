@@ -10,7 +10,7 @@ ysize = 750
 datesin = ['2019-11-12', '2019-11-13', '2019-11-14', '2019-11-15', '2019-11-16']
 times = ['00:00', '12:00']
 
-saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Tests\Slope+Wind'
+saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\Tests\DataDump Test'
 
 #FileLocations
 waterfolder = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Surface Water\EU Database\150E-20S'

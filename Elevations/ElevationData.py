@@ -67,7 +67,7 @@ class Elevation:
         quaddim = 3
 
         #find elevations and box size
-        elemat, delh = self.Elevation
+        elemat, delh = self.Elevation()
         # x and y delta as angles
         delx = abs(self.top_left[0] - self.bot_right[0]) / self.xres
         dely = abs(self.top_left[1] - self.bot_right[1]) / self.yres
@@ -93,9 +93,7 @@ class Elevation:
                     slopmat = np.zeros((quaddim, quaddim))
                     sol = np.array([elemat[j][i - 1], elemat[j][i], elemat[j][i + 1]])
                     for k in range(quaddim):
-                        slopmat[k, 0] = (k * xdelta) ** 2
-                        slopmat[k, 1] = (k * xdelta)
-                        slopmat[k, 2] = 1
+                        slopmat[k, :] = [(k * xdelta) ** 2, (k * xdelta), 1]
 
                     abc = np.array(np.linalg.solve(slopmat, sol))
                     #first derivative of resulting quadratic
@@ -110,9 +108,7 @@ class Elevation:
                     slopmat = np.zeros((quaddim, quaddim))
                     sol = np.array([elemat[j - 1][i], elemat[j][i], elemat[j + 1][i]])
                     for k in range(3):
-                        slopmat[k, 0] = (k * ydelta) ** 2
-                        slopmat[k, 1] = (k * ydelta)
-                        slopmat[k, 2] = 1
+                        slopmat[k, :] = [(k * ydelta) ** 2, (k * ydelta), 1]
 
                     abc = np.array(np.linalg.solve(slopmat, sol))
                     yslope[j, i] = (2 * abc[0] + abc[1])

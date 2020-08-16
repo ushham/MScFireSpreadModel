@@ -13,7 +13,7 @@ class WindData:
         self.bot_right = coord2
         self.xres = xres
         self.yres = yres
-        self.res = ge.res
+        self.res = 0.25
 
     # calculate number of grib coords to extract
     def delx(self):
@@ -28,8 +28,11 @@ class WindData:
         dy = self.dely()
         #Extract 10m u and v components of wind from GRIB
         print('Extracting GRIB')
-        u = ge.GribExt(self.fileloc, self.coord0, self.top_left, self.time, '10U', dx, dy)
-        v = ge.GribExt(self.fileloc, self.coord0, self.top_left, self.time, '10UV', dx, dy)
+        u = ge.GribExtract(self.fileloc, self.coord0, self.top_left, self.time, '10U', dx, dy)
+        v = ge.GribExtract(self.fileloc, self.coord0, self.top_left, self.time, '10UV', dx, dy)
+
+        u = u.Extract_Data
+        v = v.Extract_Data
 
         ######convert small array to big array######
         uout = np.zeros((dx, dy))
