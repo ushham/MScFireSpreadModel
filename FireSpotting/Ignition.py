@@ -5,9 +5,9 @@ class SubModel3:
         self.mid = mid
         self.skew = 1 / skew
 
-    def PDF(self, z):
+    def PDF(self, r):
         b = -self.skew * self.mid
-        pow = b + self.skew * z
+        pow = b + self.skew * r
         return np.exp(pow) / (1 + np.exp(pow))
 
 

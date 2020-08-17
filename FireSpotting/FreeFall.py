@@ -1,62 +1,106 @@
 import numpy as np
 import scipy.integrate as int
 import matplotlib.pyplot as plt
-
+from scipy.optimize import minimize as mzn
+from scipy.optimize import root
 class SubModel2:
-    def __init__(self, r0, rho0, eta, w0, wx, h):
-        self.r0 = r0
-        self.rho0 = rho0
+    #Assumptions
+    Re = 10000   #Reynolds number from litrature
+    Sc = 0.7    #Schmidt number, from litrature
+    beta = 4.3 * (10 ** -7) * (1 + 0.276 * (Re ** (1 / 2)) * (Sc ** (1 / 3)))
+
+    def __init__(self, eta, w0, wx):
         self.eta = eta
         self.w0 = w0
         self.wx = wx
-        self.Re = 3400
-        self.Sc = 0.7
-        self.beta = 4.3 * (10 ** -7) * (1 + 0.276 * (self.Re ** (1/2)) * (self.Sc ** (1/3)))
-        self.z0 = h
 
-    def r_r0(self, t):
-        r4 = self.r0 ** 4 - np.sqrt(3) * (self.beta ** 2) * (t ** 2) / 8
+    def r_r0(self, t, r0):
+        r4 = r0 ** 4 - np.sqrt(3) * (self.beta ** 2) * (t ** 2) / 8
         if r4 < 0:
             r4 = np.nan
-        r = r4 ** (1 / 4) / self.r0
+        r = r4 ** (1 / 4) / r0
         return r
 
     def rho_rho0(self, t):
         return 1 / (1 + self.eta * t ** 2)
 
-    def terminal_vel(self, t):
-        return self.w0 * (self.rho_rho0(t) * self.r_r0(t)) ** (1/2)
+    def terminal_vel(self, t, r0):
+        return self.w0 * (self.rho_rho0(t) * self.r_r0(t, r0)) ** (1/2)
 
-    def coord(self, t):
+    def coord(self, t, r0, z0):
         x = self.wx * t
-        time = lambda t: self.terminal_vel(t)
-        if np.isnan(self.r_r0(t)):
+        time = lambda t: self.terminal_vel(t, r0)
+        if np.isnan(self.r_r0(t, r0)):
             y = np.nan
         else:
-            y = self.z0 - int.quad(time, 0, t)[0]
+            y = z0 - int.quad(time, 0, t)[0]
         return [x, y]
 
-    def dist(self, t):
-        loc = self.coord(t)
-        return np.sqrt(loc[0] ** 2 + (loc[1] - self.z0) ** 2)
+    def f(self, t, r0, z0):
+        t = t[0]
+        return abs(self.coord(t, r0, z0)[1])
+
+    def ground(self, r0, z0):
+        #returns time when firebrand hits the ground.
+        #Calcs time taken for y distance = z
+        #time = mzn(self.f, [1], args=(r0, z0))
+        time = root(self.f, 1, args=(r0, z0))
+        if time.success:
+            out = time.x[0]
+        else:
+            out = np.nan
+        return out
 
 #############################################
-n = 200
-                #r0, rho0, eta, w0, wx, h
-test = SubModel2(0.01, 545, 0.001, 2, 20, 1000)
+# test = SubModel2(0.02, 20, 5)
+# # n = 100
+# # coord=np.zeros((n, 2))
+# # count=0
+# print(test.ground(0.005, 240))
+# for i in range(n):
+#     hol = test.coord(i, 0.009, 140)
+#     if hol[1]>0:
+#         coord[i] = hol
+#         count += 1
+# print(coord)
+# plt.plot(coord[:count, 0], coord[:count, 1])
+# plt.xlabel("x-Distance (m)")
+# plt.ylabel("z-Height (m)")
+#
+# plt.show()
 
-hold = np.zeros((n, 6))
-for i in range(n):
-    hold[i, 0] = test.dist(i)
-    hold[i, 1:3] = test.coord(i)
-    hold[i, 3] = test.rho_rho0(i)
-    hold[i, 4] = test.terminal_vel(i)
-    hold[i, 5] = test.r_r0(i)
+# test = SubModel2(0.02, 16, 5)
+# n = 1000
+# coord=np.zeros((n, 2))
+# count=0
+# for i in range(n):
+#     hol = test.terminal_vel(i, 0.02)
+#     coord[i, 0] = i
+#     coord[i, 1] = hol
+#
+#
+#
+# plt.plot(coord[:, 0], coord[:, 1])
+# plt.xlabel("Time (s)")
+# plt.axvline(x=51, linestyle="--", color="grey")
+# plt.ylabel(r"$w_f\ (ms^{-1}$)")
+#
+# plt.show()
 
-
-plt.scatter(hold[:, 1], hold[:, 2])
-print(test.beta)
-x = np.linspace(0, n/20, n)
-#plt.plot(hold[:, 4])
-plt.ylim(0, 1000)
-plt.show()
+# test = SubModel2(0.02, 16, 5)
+# n = 1000
+# coord=np.zeros((n, 2))
+# count=0
+# for i in range(n):
+#     hol = test.r_r0(i, 0.02)
+#     coord[i, 0] = i
+#     coord[i, 1] = hol
+#
+#
+#
+# plt.plot(coord[:, 0], coord[:, 1]*0.02)
+# plt.xlabel("Time (s)")
+# plt.axvline(x=51, linestyle="--", color="grey")
+# plt.ylabel(r"$r(t)\ (m)$")
+#
+# plt.show()
