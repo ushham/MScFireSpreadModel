@@ -1,6 +1,5 @@
 from osgeo import gdal
 from datetime import datetime
-import calendar
 import numpy as np
 
 #GRIB Constants

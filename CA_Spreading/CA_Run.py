@@ -1,5 +1,4 @@
 import numpy as np
-from numba import jit
 import time
 from CA_Spreading import CA_Definition as p
 from Mapping_Tools import RasterConvert as rc

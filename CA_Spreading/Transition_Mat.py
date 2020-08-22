@@ -1,5 +1,4 @@
 import numpy as np
-import math
 from numba import jit, int32, boolean, float32
 from numba.experimental import jitclass
 import random

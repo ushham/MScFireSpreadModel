@@ -1,7 +1,5 @@
 import numpy as np
 import scipy.integrate as int
-import matplotlib.pyplot as plt
-from scipy.optimize import minimize as mzn
 from scipy.optimize import root
 class SubModel2:
     #Assumptions

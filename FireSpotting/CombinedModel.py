@@ -1,7 +1,5 @@
 import numpy as np
 from FireSpotting import Ascent, FreeFall, Ignition
-import matplotlib.pyplot as plt
-import scipy.ndimage
 
 class FireBrand:
     #Assumptions made on some paramters:
@@ -11,15 +9,14 @@ class FireBrand:
 
     mid = 0.05   #Firebrand size which causes ignition 50% of the time
     skew = 1
-    eta = 0.02
-    w0 = 10
+    eta = 0.005
+    w0 = 16
 
     mu= 0.005
 
 
-    def __init__(self, lam, wx, num):
+    def __init__(self, lam, num):
         self.lam = lam
-        self.xwind = wx
         self.num = num
 
     def mass(self):
@@ -44,19 +41,18 @@ class FireBrand:
 
         return holdr, holdz
 
-    def float(self, r0, z):
-        SubMod2 = FreeFall.SubModel2(self.eta, self.w0, self.xwind)
+    def float(self, r0, z, wx):
+        SubMod2 = FreeFall.SubModel2(self.eta, self.w0, wx)
         time = np.empty(self.num)
         rf = np.empty(self.num)
         for i in range(self.num):
             time[i] = SubMod2.ground(r0[i], z[i])
             rf[i] = SubMod2.r_r0(time[i], r0[i]) * r0[i]
-            #print(r0, z, time[i], rf[i])
 
         return time, rf
 
-    def dist(self, time, r0, z):
-        SubMod2 = FreeFall.SubModel2(self.eta, self.w0, self.xwind)
+    def dist(self, time, r0, z, wx):
+        SubMod2 = FreeFall.SubModel2(self.eta, self.w0, wx)
         coordx = np.empty(self.num)
         for i in range(self.num):
             coordx[i] = SubMod2.coord(time[i], r0[i], z[i])[0]
@@ -68,52 +64,42 @@ class FireBrand:
         return igprob
 
 
-#minh, maxh, lam, maxm
+    def journey(self, wx, wy, p0, xres, yres, shift):
+        r, z = self.loft()
+        t, rf = self.float(r, z, wx)
+        x = self.dist(t, r, z, wx)
+        y = self.dist(t, r, z, wy)
+        p = self.lite(rf)
 
-from matplotlib import ticker
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+        #return only interesting points
+        filt = ~np.isnan(p)
+        x = x[filt]
+        y = y[filt]
+        x = x[p[filt] >= p0]
+        y = y[p[filt] >= p0]
 
-n=110
-test = FireBrand(100, 1, 1)
+        # find distance off centre-line
+        angle = np.random.normal(0, shift, x.shape[0])
+        xoffc = x * np.tan(2 * np.pi * angle / 360)
+        yoffc = y * np.tan(2 * np.pi * angle / 360)
 
+        x = np.round(x / xres)
+        y = np.round(y / yres)
+        xoffc = np.round(xoffc / xres)
+        yoffc = np.round(yoffc / yres)
 
-z = np.linspace(800, 10, n)
-r0 = np.linspace(0, 0.03, n)
+        filt = np.logical_or(x > 0, y > 0)
 
-rf = np.empty((n, n))
-ic = 0
-jc = 0
-for i in z:
-    jc = 0
-    for j in r0:
-        rf[ic, jc] = test.float([j], [i])[1][0] * j
-        jc += 1
-    ic += 1
+        xoffc = xoffc[filt]
+        yoffc = yoffc[filt]
+        x = x[filt]
+        y = y[filt]
+        print(x, y)
 
-xx, yy = np.meshgrid(r0, z)
+        return x + yoffc, y + xoffc
 
-#plt.scatter(xx, yy, c=rf)
-print(np.round(rf, 3))
-fig, ax = plt.subplots()
-pt = plt.contourf(xx, yy, rf, cmap='RdGy')
+test = FireBrand(400, 100)
 
-plt.xlabel(r"Initial Radius $r_0$ (m)")
-plt.ylabel(r"Height (m)")
-plt.ylim(0, 400)
-divider = make_axes_locatable(ax)
+#wx, wy, p0, xres, yres, shift
+print(test.journey(5, 2, 0.4, 50, 50, 10))
 
-cax = divider.append_axes('right', size='3%', pad=0.2)
-plt.colorbar(cax=cax)
-cax.set_ylabel("Radius on Landing (m)")
-
-plt.show()
-###############################
-
-# n = 1000000
-# test = FireBrand(100, 10, n)
-# lf = test.loft()
-# fl = test.float(*lf)
-#
-# xdis = test.dist(fl[0], *lf)
-# loc = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\CSVs\FireBrands\Firebrand-x-dir.csv"
-# np.savetxt(loc, xdis, delimiter=',')
