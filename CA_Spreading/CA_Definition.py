@@ -26,7 +26,7 @@ gamma = 0.05        #growth factor
 
 n = 300         #size of array
 m = 300
-t = 2000
+t = 500
 
 wfac = 0
 sfac = 0.5

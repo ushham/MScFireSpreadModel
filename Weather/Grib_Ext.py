@@ -49,7 +49,7 @@ class GribExtract:
             #extract element label
             type = message[self.elementlabel]
 
-            if int(timeband[0]) == unixtime and type == self.ele:
+            if int(timeband[0]) == unixtime and type == self.mat:
                 out = np.zeros((self.xres, self.yres))
                 for x in range(self.xres):
                     for y in range(self.yres):

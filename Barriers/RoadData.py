@@ -86,10 +86,11 @@ class RoadData:
         return tiffloc
 
     def roadrst(self):
-        ds = gd.Open(self.loc)
+        ds = gd.Open(self.fileloc)
         myarray = np.array(ds.GetRasterBand(1).ReadAsArray())
         #alters array to retun 0 where roads are present, 1 where not
         myarray = np.where(myarray == 0 , 1, myarray)
         myarray = np.where(myarray != 1 , 0, myarray)
+
         return myarray
 

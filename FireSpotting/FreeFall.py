@@ -43,7 +43,6 @@ class SubModel2:
     def ground(self, r0, z0):
         #returns time when firebrand hits the ground.
         #Calcs time taken for y distance = z
-        #time = mzn(self.f, [1], args=(r0, z0))
         time = root(self.f, 1, args=(r0, z0))
         if time.success:
             out = time.x[0]

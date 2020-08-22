@@ -15,17 +15,18 @@ class WindTopography:
     def thetahold(self):
         return np.genfromtxt(self.funcdata, delimiter=',')
 
-    def tau(self, theta):
+    def tau(self, theta, hold):
         #Function which returns increase in wind velocity due to slope
         #Assuming function is to 3 decimals of precision
-        gap = self.thetahold()[0, 1] - self.thetahold()[0, 0]
-        start = theta - self.thetahold()[0, 0]
+        gap = hold[0, 1] - hold[0, 0]
+        start = theta - hold[0, 0]
         loc = int(start / gap)
-        return self.thetahold()[1, loc] * self.hillfact + 1
+        return hold[1, loc] * self.hillfact + 1
 
     def Data_Extract(self):
         #Expects 2d array of slope and 2d array of wind at same resolution. true = u, false = v
         outarr = np.zeros(self.slope.shape)
+        thetahold = self.thetahold()
 
         #to make range directions uniform, make v wind negitive (positive wind blows south)
         #Also set dimention
@@ -55,15 +56,15 @@ class WindTopography:
             for j in rng:
                 if bool:
                     if j == rng[0]:
-                        outarr[i, j] = startwin * self.tau(np.sign(startwin) * self.slope[i, j])
+                        outarr[i, j] = startwin * self.tau(np.sign(startwin) * self.slope[i, j], thetahold)
                     else:
-                        outarr[i, j] = outarr[i, j + side] * self.tau(np.sign(outarr[i, j + side]) * self.slope[i, j])
+                        outarr[i, j] = outarr[i, j + side] * self.tau(np.sign(outarr[i, j + side]) * self.slope[i, j], thetahold)
                         outarr[i, j] = np.sign(outarr[i, j]) * min(upperlim, abs(outarr[i, j]))
                 else:
                     if j == rng[0]:
-                        outarr[j, i] = startwin * self.tau(np.sign(startwin) * self.slope[j, i])
+                        outarr[j, i] = startwin * self.tau(np.sign(startwin) * self.slope[j, i], thetahold)
                     else:
-                        outarr[j, i] = outarr[j + side, i] * self.tau(np.sign(outarr[j + side, i]) * self.slope[j, i])
+                        outarr[j, i] = outarr[j + side, i] * self.tau(np.sign(outarr[j + side, i]) * self.slope[j, i], thetahold)
                         outarr[j, i] = np.sign(outarr[j, i]) * min(upperlim, abs(outarr[j, i]))
 
         return outarr

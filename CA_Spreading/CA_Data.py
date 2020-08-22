@@ -9,88 +9,113 @@ from Mapping_Tools import RasterConvert as rc
 from Mapping_Tools import LatLongTools as llt
 import numpy as np
 
-#Save names
-elesav = "ElevationData"
-watsav = p.saveloc + "\\" + "WaterData"
-barriersav = p.saveloc + "\\" + "FireBreaks"
-anisav = p.saveloc + "\\" + "animationALLTEST"
+class RunData:
 
-coord = (p.coord1, p.coord2)
+    def __init__(self):
+        self.coord = (p.coord1, p.coord2)
+        self.saveloc = p.saveloc
+        self.elesave = self.saveloc + "\\" + "ElevationData"
+        self.watsave =  self.saveloc + "\\" + "WaterData"
+        self.barriersave = self.saveloc + "\\" + "FireBreaks"
+        self.rows = d.n
+        self.cols = d.m
+        ##### Resolutions in km #####
+        self.xres, self.yres = llt.Coord2Dist((self.coord[1][1] - self.coord[0][1]) / self.rows, (self.coord[1][0] - self.coord[0][0]) / self.cols, self.coord[0][1])
 
-def RunData():
-    ##### Resolutions in km #####
-    xres, yres = llt.Coord2Dist((coord[1][1] - coord[0][1]) / d.n, (coord[1][0] - coord[0][0]) / d.m, coord[0][1])
+    def SlopeData(self):
+        ######    Slope Data    ##########
+        eleloc = p.elefolder + '\\' + p.elefile
+        if d.ele:
+            print('Extracting Elevation Data')
+            delh = ed.Elevation(eleloc, self.coord[0], self.coord[1], self.rows, self.cols, self.saveloc, self.elesave).Extract_Data()
+        else:
+            arr = rc.readrst(self.elesave)
+            delh = np.max(arr) - np.min(arr)
+        return delh
 
-    ######    Slope Data    ##########
-    eleloc = p.elefolder + '\\' + p.elefile
-    if d.ele:
-        print('Extracting Elevation Data')
-        delh = ed.ElevationSlope(eleloc, coord[0], coord[1], d.n, d.m, p.saveloc, elesav)
+    def WeatherData(self, delh):
+        ######    Modified wind data #########
+        if d.wth:
+            wethloc = p.weatherfolder + '\\' + p.weatherfile
+
+            reppday = 1
+            dim = len(p.datesin) * len(p.times)
+            uwind = np.empty((dim, self.cols, self.rows))
+            vwind = np.empty((dim, self.cols, self.rows))
+            i = 0
 
 
-    ######    Modified wind data #########
-    wethloc = p.weatherfolder + '\\' + p.weatherfile
+            print('Extracting Wind Data')
+            for date in p.datesin:
+                for time in p.times:
+                    tim = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M')
+                    sol = Wind_Data.WindData(wethloc, self.saveloc, tim, p.startcoords, self.coord[0], self.coord[1], self.rows, self.cols, False).Extract_Data()
 
-    reppday = 1
-    dim = len(p.datesin) * len(p.times)
-    uwind = np.empty((dim, d.m, d.n))
-    vwind = np.empty((dim, d.m, d.n))
-    i = 0
-    if d.wth:
-        if not(d.ele):
-            delh = p.delh
+                    uwind[i, :, :] = sol[0]
+                    vwind[i, :, :] = sol[1]
+                    i += 1
 
-        print('Extracting Wind Data')
-        for date in p.datesin:
-            for time in p.times:
-                tim = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M')
-                print(tim)
+            #wind slope interaction
+            xslope = np.genfromtxt(p.saveloc + "\\" + "xslope.csv", delimiter=",")
+            yslope = np.genfromtxt(p.saveloc + "\\" + "yslope.csv", delimiter=",")
 
-                res = Wind_Data.WindDat(wethloc, p.saveloc, tim, p.startcoords, coord[0], coord[1], d.n, d.m, False)
+            print("Modifying Wind Data")
+            for ell in range(dim):
+                uwind[ell, :, :] = Wind_Slope.WindTopography(xslope, uwind[ell, :, :], delh, 1000 * self.xres, True).Data_Extract()
+                vwind[ell, :, :] = Wind_Slope.WindTopography(yslope, vwind[ell, :, :], delh, 1000 * self.yres, False).Data_Extract()
 
-                uwind[i, :, :] = res[0]
-                vwind[i, :, :] = res[1]
-                i += 1
+                windloc = p.saveloc + "\\" + "WindData" + str(ell)
+                rc.Convert2tif(uwind[ell, :, :], windloc + "-u", self.coord[0], self.coord[1], self.rows, self.cols, False)
+                rc.Convert2tif(vwind[ell, :, :], windloc + "-v", self.coord[0], self.coord[1], self.rows, self.cols, False)
 
-        #wind slope interaction
-        xslope = np.genfromtxt(p.saveloc + "\\" + "xslope.csv", delimiter=",")
-        yslope = np.genfromtxt(p.saveloc + "\\" + "yslope.csv", delimiter=",")
-
-        for ell in range(dim):
-            uwind[ell, :, :] = Wind_Slope.SlopeWind(xslope, uwind[ell, :, :], delh, 1000 * xres, True)
-            vwind[ell, :, :] = Wind_Slope.SlopeWind(yslope, vwind[ell, :, :], delh, 1000 * yres, False)
-
-            windloc = p.saveloc + "\\" + "WindData" + str(ell)
-            rc.Convert2tif(uwind[ell, :, :], windloc + "-u", coord[0], coord[1], d.n, d.m, False)
-            rc.Convert2tif(vwind[ell, :, :], windloc + "-v", coord[0], coord[1], d.n, d.m, False)
+            return 0
 
 
     ######   Fire breaks   ########
     #Surface Water
-    if d.wat:
-        print('Extracting Water Data')
-        watloc = p.waterfolder + '\\' + p.waterfile
-        water = WaterData.Surface_Water(watloc, coord[0], coord[1], d.n, d.m, '')
-        rc.Convert2tif(water, watloc, coord[0], coord[1], d.n, d.m, False)
+    def SurfaceWater(self):
+        if d.wat:
+            print('Extracting Water Data')
+            watloc = p.waterfolder + '\\' + p.waterfile
+            water = WaterData.SurfaceWater(watloc, self.coord[0], self.coord[1], self.cols, self.rows, '').Extract_Data()
+            rc.Convert2tif(water, watloc, self.coord[0], self.coord[1], self.cols, self.rows, False)
+
+        return 0
 
     #Road data
-    if d.rod:
-        print('Extracting Road Data')
-        roadloc = p.roadfolder + "\\" + p.roadfile
-        #make raster
-        roads = rd.roadrst(rd.shp2rst(roadloc, coord[0], coord[1], d.n, d.m, p.saveloc))
+    def RoadData(self):
+        if d.rod:
+            print('Extracting Road Data')
+            roadloc = p.roadfolder + "\\" + p.roadfile
+            #make raster
+            roads = rd.RoadData(roadloc, self.coord[0], self.coord[1], self.rows, self.cols, self.saveloc).shp2rst()
+        else:
+            roads = 0
+        return roads
 
     #Combine Breaks
-    if d.rod and d.wat:
-        breaks = np.multiply(water, roads)
-    elif d.rod or d.wat:
-        breaks = water if d.wat else roads
+    def CombineBreaks(self):
+        water = self.SurfaceWater()
+        roads = self.RoadData()
+        if d.rod and d.wat:
+            breaks = np.multiply(water, roads)
+        elif d.rod or d.wat:
+            breaks = water if d.wat else roads
+        else:
+            breaks = 0
 
-        #write tif of barriers
-    if d.rod or d.wat:
-        rc.Convert2tif(breaks, barriersav, coord[0], coord[1], d.n, d.m, False)
+            #write tif of barriers
+        if d.rod or d.wat:
+            rc.Convert2tif(breaks, self.barriersave, self.coord[0], self.coord[1], self.rows, self.cols, False)
+        return 0
 
-    return 0
+    def ExtractAll(self):
+        dh = self.SlopeData()
+        self.WeatherData(dh)
+        self.CombineBreaks()
+        return 0
+
+
 
 
 
