@@ -1,16 +1,18 @@
 import numpy as np
 import scipy.integrate as int
 from scipy.optimize import root
+
 class SubModel2:
-    #Assumptions
-    Re = 10000   #Reynolds number from litrature
-    Sc = 0.7    #Schmidt number, from litrature
-    beta = 4.3 * (10 ** -7) * (1 + 0.276 * (Re ** (1 / 2)) * (Sc ** (1 / 3)))
 
     def __init__(self, eta, w0, wx):
         self.eta = eta
         self.w0 = w0
         self.wx = wx
+
+        # Assumptions
+        self.Re = 12000  # Reynolds number from litrature
+        self.Sc = 0.7  # Schmidt number, from litrature
+        self.beta = 4.3 * (10 ** -7) * (1 + 0.276 * (self.Re ** (1 / 2)) * (self.Sc ** (1 / 3)))
 
     def r_r0(self, t, r0):
         r4 = r0 ** 4 - np.sqrt(3) * (self.beta ** 2) * (t ** 2) / 8
@@ -47,57 +49,3 @@ class SubModel2:
         else:
             out = np.nan
         return out
-
-#############################################
-# test = SubModel2(0.02, 20, 5)
-# # n = 100
-# # coord=np.zeros((n, 2))
-# # count=0
-# print(test.ground(0.005, 240))
-# for i in range(n):
-#     hol = test.coord(i, 0.009, 140)
-#     if hol[1]>0:
-#         coord[i] = hol
-#         count += 1
-# print(coord)
-# plt.plot(coord[:count, 0], coord[:count, 1])
-# plt.xlabel("x-Distance (m)")
-# plt.ylabel("z-Height (m)")
-#
-# plt.show()
-
-# test = SubModel2(0.02, 16, 5)
-# n = 1000
-# coord=np.zeros((n, 2))
-# count=0
-# for i in range(n):
-#     hol = test.terminal_vel(i, 0.02)
-#     coord[i, 0] = i
-#     coord[i, 1] = hol
-#
-#
-#
-# plt.plot(coord[:, 0], coord[:, 1])
-# plt.xlabel("Time (s)")
-# plt.axvline(x=51, linestyle="--", color="grey")
-# plt.ylabel(r"$w_f\ (ms^{-1}$)")
-#
-# plt.show()
-
-# test = SubModel2(0.02, 16, 5)
-# n = 1000
-# coord=np.zeros((n, 2))
-# count=0
-# for i in range(n):
-#     hol = test.r_r0(i, 0.02)
-#     coord[i, 0] = i
-#     coord[i, 1] = hol
-#
-#
-#
-# plt.plot(coord[:, 0], coord[:, 1]*0.02)
-# plt.xlabel("Time (s)")
-# plt.axvline(x=51, linestyle="--", color="grey")
-# plt.ylabel(r"$r(t)\ (m)$")
-#
-# plt.show()

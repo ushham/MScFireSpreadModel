@@ -52,3 +52,9 @@ t = 10
 
 #Height Difference
 delh = 50
+
+
+from Mapping_Tools import LatLongTools as llt
+print(coord2[1]-coord1[1], coord1[0]-coord2[0])
+
+#xres, yres = llt.Coord2Dist(pm.coord2[1] - pm.coord1[1], pm.coord1[0] - pm.coord2[0])

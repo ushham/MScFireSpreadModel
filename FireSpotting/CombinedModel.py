@@ -2,22 +2,21 @@ import numpy as np
 from FireSpotting import Ascent, FreeFall, Ignition
 
 class FireBrand:
-    #Assumptions made on some paramters:
-    minh = 10   #Min firebrand height escaping plume, any lower and we assume this is modelled in normal fire spread
-    maxh = 1000 #Maximum firebrand altitude attaned. From Litrature, any higher and we are not expecting any firebrands to land.
-    maxm = 0.03 #10g firebrand assumed as maximum loftable (from litrature).
-
-    mid = 0.05   #Firebrand size which causes ignition 50% of the time
-    skew = 1
-    eta = 0.005
-    w0 = 16
-
-    mu= 0.005
-
-
     def __init__(self, lam, num):
         self.lam = lam
         self.num = num
+
+        # Assumptions made on some paramters:
+        self.minh = 10      # Min firebrand height escaping plume, any lower and we assume this is modelled in normal fire spread
+        self.maxh = 1000    # Maximum firebrand altitude attaned. From Litrature, any higher and we are not expecting any firebrands to land.
+        self.maxm = 0.03    #firebrand assumed as maximum loftable (from litrature).
+
+        self.mid = 0.001    # Firebrand size which causes ignition 50% of the time
+        self.skew = 0.0001  #Skew of firebrand iginition probability
+        self.eta = 0.005    #Fuel parameter. Fitted to liturature
+        self.w0 = 16        #Initial speed downwards, from liturature
+
+        self.mu = 0.005     #Distribution of initial radii
 
     def mass(self):
         #power law distribution for firebrand size
@@ -71,12 +70,15 @@ class FireBrand:
         y = self.dist(t, r, z, wy)
         p = self.lite(rf)
 
+        xres = xres * 1000
+        yres = yres * 1000
+
         #return only interesting points
-        filt = ~np.isnan(p)
-        x = x[filt]
-        y = y[filt]
-        x = x[p[filt] >= p0]
-        y = y[p[filt] >= p0]
+        with np.errstate(invalid='ignore'):
+            filt = (p <= p0)
+
+        x[filt] = np.nan
+        y[filt] = np.nan
 
         # find distance off centre-line
         angle = np.random.normal(0, shift, x.shape[0])
@@ -85,21 +87,20 @@ class FireBrand:
 
         x = np.round(x / xres)
         y = np.round(y / yres)
+
         xoffc = np.round(xoffc / xres)
         yoffc = np.round(yoffc / yres)
 
-        filt = np.logical_or(x > 0, y > 0)
-
-        xoffc = xoffc[filt]
-        yoffc = yoffc[filt]
-        x = x[filt]
-        y = y[filt]
-        print(x, y)
-
         return x + yoffc, y + xoffc
 
-test = FireBrand(400, 100)
+    def Collection(self, wxtot, wytot, p0, xres, yres, shift, time):
+        #To get around numba issue not letting this class run (scipy), we generate a large sample of firebrand trajectories and pick from it randomly
+        #Takes in all wind information for given time and produces random sample of n firebrands for each time period
 
-#wx, wy, p0, xres, yres, shift
-print(test.journey(5, 2, 0.4, 50, 50, 10))
+        hold = np.empty((time, self.num, 2))
+        for i in range(time):
+            out = self.journey(np.max(wxtot[i, :, :]), np.max(wytot[i, :, :]), p0, xres, yres, shift)
+            if len(out[0]) > 0:
+                hold[i, :, 0], hold[i, :, 1] = out[0], out[1]
+        return hold
 

@@ -10,5 +10,3 @@ class SubModel3:
         pow = b + self.skew * r
         return np.exp(pow) / (1 + np.exp(pow))
 
-
-

@@ -41,4 +41,9 @@ class Visualisation:
 
     #def OneDim(self, rc, num):
 
-    #def TimeSnips(self, times):
+    def TimeSnips(self):
+        figure = plt.figure()
+        ca_plot = plt.imshow(self.arr, cmap='seismic', interpolation='bilinear', vmin=0, vmax=(self.k - 1))
+        plt.colorbar(ca_plot)
+        #ca_plot.set_data(self.arr)
+        plt.show()

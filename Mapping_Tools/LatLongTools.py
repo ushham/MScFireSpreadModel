@@ -24,7 +24,7 @@ def CoordLoc(coord):
 
 
 def Coord2Dist(delx, dely, lat):
-    #arc length given arc angle
+    #Returns distance given grid size
     erad = 6371  # radius of the earth in km
     deg = 360  # degress per 2 radians
     tau = 2 * np.pi
@@ -46,8 +46,6 @@ def PrintLatLong(dumploc, coord1, coord2, xres, yres):
             lat[j, i] = coord1[0] - dely * j
             long[j, i] = coord1[1] + delx * i
 
-    #np.savetxt(dumploc + '\\' +'lat.csv', lat, delimiter=',')
-    #np.savetxt(dumploc + '\\' +'lon.csv', long, delimiter=',')
     rc.Convert2tif(lat, dumploc + '\\' +'lat', coord1, coord2, xres, yres, False)
     rc.Convert2tif(long, dumploc + '\\' + 'lon', coord1, coord2, xres, yres, False)
     return 0

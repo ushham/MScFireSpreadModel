@@ -1,8 +1,9 @@
 import numpy as np
-from numba import jit, int32, boolean, float32
+from numba import int32, boolean, float32
 from numba.experimental import jitclass
 import random
 from CA_Spreading import CA_Definition as p
+
 
 #Parameters
 hour2min = 60
@@ -20,6 +21,8 @@ spec = [
     ('yslp', float32[:, :]),
     ('fbrk', float32[:, :]),
     ('timestep', int32)
+    # ('jcalc', int32),
+    # ('ellcalc', int32)
 ]
 
 @jitclass(spec)
@@ -40,13 +43,11 @@ class  RunCA:
         self.timestep = hr
 
     # Definition of Spread (forward Eular)
-    #@jit(nopython=True)
     def func(self, x, y, z):
         n = y + K * (x - 2 * y + z) + p.delt * p.gamma * y * (1 - y)
         return n
 
     ############## Make Transition Matrix ############
-    #@jit(nopython = True)
     def Pmaker(self):
         A = range(self.k)
         P = np.zeros((self.k ** 3, self.k))
@@ -77,14 +78,13 @@ class  RunCA:
 
 
     ######## Returns column which refers to element with probability prob
-    #@jit(nopython = True)
     def colcheck(self, prob, x, P):
         i = 0
         while prob > P[x, i]:
             i += 1
         return i
 
-    #@jit(nopython = True)
+
     def wind(self, arr, xwind, ywind, m, n):
         #x dir
         if xwind[m, n] > 0:
@@ -103,7 +103,7 @@ class  RunCA:
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
-    #@jit(nopython = True)
+
     def slope(self, arr, xslp, yslp, m, n):
         #x dir
         if xslp[m, n] > 0:
@@ -122,8 +122,8 @@ class  RunCA:
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
-    #@jit(nopython = True)
-    def update2D(self, P):
+
+    def update2D(self, P, fb):
         #loop for time steps
         t, m, n = self.initial.shape
 
@@ -137,6 +137,7 @@ class  RunCA:
             wetnum = time // wetchn
             for j in range(1, m-1):
                 for ell in range(1, n-1):
+                    #Alter the direction of update on each pass
                     if time % 4 == 0:
                         alpha = int(self.initial[time - 1, j, ell - 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell + 1])
                         beta = int(self.initial[time - 1, j - 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j + 1, ell])
@@ -156,6 +157,7 @@ class  RunCA:
                         prob1 = random.random()
                         prob2 = random.random()
 
+                        #Update from spread
                         self.initial[time, j, ell] = np.ceil(1/2 * (self.colcheck(prob1, alpha, P) + self.colcheck(prob2, beta, P)))
 
                         #wind and slope
@@ -164,7 +166,20 @@ class  RunCA:
                         self.initial[time, j, ell] = round(self.initial[time, j, ell] + windcor + slopecor)
                         self.initial[time, j, ell] = max(min(self.initial[time, j, ell], self.k - 1), 0)
 
-                        #Apply fire breaks
+                        #Run Firebrands
+                        if p.frbuse:
+                            if self.initial[time, j, ell] > p.minKval and self.initial[time, j, ell] < p.maxKval:
+                                #Calculate # hours since begining of run
+                                act = p.delt * time / (60 * 60)
+                                index = int(act // self.timestep)
+
+                                row = random.randint(0, p.num)
+                                if ~np.isnan(fb[index, row, 0]) and ~np.isnan(fb[index, row, 1]):
+                                    jcalc, ellcalc = 2* int(fb[index, row, 0]), 2*int(fb[index, row, 1])
+                                    if self.initial[time, j + jcalc, ell + ellcalc] == 0:
+                                        self.initial[time, j + jcalc:j + jcalc+10, ell + ellcalc:ell + ellcalc+10] = 10
+
+                                #Apply fire breaks
                         if self.fbrk != None:
                             self.initial[time, j, ell] = self.fbrk[j, ell] * self.initial[time, j, ell]
 

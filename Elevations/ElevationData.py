@@ -76,7 +76,6 @@ class Elevation:
         xdelta, ydelta = llt.Coord2Dist(delx, dely, self.top_left[0])
         xdelta = km2m * xdelta
         ydelta = km2m * ydelta
-        print(xdelta, ydelta)
 
         xslope = np.zeros((self.yres, self.xres))
         yslope = np.zeros((self.yres, self.xres))

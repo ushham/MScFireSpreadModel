@@ -14,7 +14,7 @@ class RunData:
     def __init__(self):
         self.coord = (p.coord1, p.coord2)
         self.saveloc = p.saveloc
-        self.elesave = self.saveloc + "\\" + "ElevationData"
+        self.elesave = "ElevationData"
         self.watsave =  self.saveloc + "\\" + "WaterData"
         self.barriersave = self.saveloc + "\\" + "FireBreaks"
         self.rows = d.n
@@ -27,9 +27,10 @@ class RunData:
         eleloc = p.elefolder + '\\' + p.elefile
         if d.ele:
             print('Extracting Elevation Data')
+
             delh = ed.Elevation(eleloc, self.coord[0], self.coord[1], self.rows, self.cols, self.saveloc, self.elesave).Extract_Data()
         else:
-            arr = rc.readrst(self.elesave)
+            arr = rc.readrst(self.saveloc + "\\" + self.elesave)
             delh = np.max(arr) - np.min(arr)
         return delh
 
@@ -79,8 +80,9 @@ class RunData:
             watloc = p.waterfolder + '\\' + p.waterfile
             water = WaterData.SurfaceWater(watloc, self.coord[0], self.coord[1], self.cols, self.rows, '').Extract_Data()
             rc.Convert2tif(water, watloc, self.coord[0], self.coord[1], self.cols, self.rows, False)
-
-        return 0
+        else:
+            water = 0
+        return water
 
     #Road data
     def RoadData(self):
@@ -88,7 +90,8 @@ class RunData:
             print('Extracting Road Data')
             roadloc = p.roadfolder + "\\" + p.roadfile
             #make raster
-            roads = rd.RoadData(roadloc, self.coord[0], self.coord[1], self.rows, self.cols, self.saveloc).shp2rst()
+            roadcl = rd.RoadData(roadloc, self.coord[0], self.coord[1], self.saveloc, self.rows, self.cols)
+            roads = roadcl.roadrst(roadcl.shp2rst())
         else:
             roads = 0
         return roads
@@ -98,6 +101,7 @@ class RunData:
         water = self.SurfaceWater()
         roads = self.RoadData()
         if d.rod and d.wat:
+
             breaks = np.multiply(water, roads)
         elif d.rod or d.wat:
             breaks = water if d.wat else roads

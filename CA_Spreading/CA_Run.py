@@ -2,10 +2,12 @@ import numpy as np
 import time
 from CA_Spreading import CA_Definition as p
 from Mapping_Tools import RasterConvert as rc
+from Mapping_Tools import LatLongTools as llt
 from CA_Spreading import Transition_Mat as tm
 from CA_Spreading import CA_Vis as vs
 from CA_Spreading import CA_Data as cd
 from Control import Parameters as pm
+from FireSpotting import CombinedModel as fs
 
 
 ######### Step 1: Run Data Grab ####################:
@@ -47,28 +49,24 @@ print('del t: ' + str(p.delt) + ' < ' + str(check1))
 
 ini = p.k - 1
 
+xres, yres = llt.Coord2Dist((pm.coord2[1] - pm.coord1[1]) / p.n, (pm.coord1[0] - pm.coord2[0]) / p.m, pm.coord1[0])
 
 ######### Step 3: Initial conditions ####################:
 
 arr = np.zeros((p.t, p.m, p.n), dtype=np.float32)
-arr[0, 230:240, 120:130] = ini
+arr[0, 480:500, 280:320] = ini
 
 ######### Step 4: Run CA ####################:
 print("Step 4: Running CA")
 hrsp = 24 // len(pm.times)
 
-ca = tm.RunCA(p.k, p.deturm, p.L, arr, windu, windv, slpx, slpy, fbrk, hrsp)
+fb = fs.FireBrand(p.meanh, p.num).Collection(windu, windv, p.minrad, xres, yres, p.shift, len(pm.times))
 
-arr = ca.update2D(ca.Pmaker())
+ca = tm.RunCA(p.k, p.deturm, p.L, arr, windu, windv, slpx, slpy, fbrk, hrsp)
+arr = ca.update2D(ca.Pmaker(), fb)
 print('Running CA')
 
 
-arrshow = np.empty((len(p.tts), p.m, p.n))
-
-icount = 0
-# for i in p.tts:
-#     arrshow[icount, :, :] = arr[i, :, :]
-#     icount += 1
 ######### Step 5: Visualisation ####################:
 print("Last Step: Making Animation")
-vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "animationALLTEST").HeatMap()
+vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "animationALLTESTfbtest").HeatMap()
