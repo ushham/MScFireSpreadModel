@@ -56,7 +56,7 @@ xres, yres = llt.Coord2Dist((pm.coord2[1] - pm.coord1[1]) / p.n, (pm.coord1[0] -
 ######### Step 3: Initial conditions ####################:
 
 arr = np.zeros((p.t, p.m, p.n), dtype=np.float32)
-arr[0, 480:500, 280:320] = ini
+arr[0, 300:310, 350:360] = ini
 
 ######### Step 4: Run CA ####################:
 print("Step 4: Running CA")

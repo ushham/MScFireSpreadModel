@@ -110,6 +110,7 @@ class RunData:
 
             #write tif of barriers
         if d.rod or d.wat:
+            print("Donezo")
             rc.Convert2tif(breaks, self.barriersave, self.coord[0], self.coord[1], self.rows, self.cols, False)
         return 0
 

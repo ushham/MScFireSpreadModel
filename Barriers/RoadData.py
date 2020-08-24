@@ -71,7 +71,7 @@ class RoadData:
         tiffloc = self.saveloc + "\\" + "RoadRaster.tif"
 
         out_source = out_driver.Create(tiffloc, self.xres, self.yres, 1, gd.GDT_Float32)
-        out_source.SetGeoTransform((self.top_left[1], xlen, 0, self.bot_right[0], 0, -ylen))
+        out_source.SetGeoTransform((self.top_left[1], xlen, 0, self.top_left[0], 0, ylen))
         #out_source.SetProjection(road_srs.ExportToWkt())
         out_lyr = out_source.GetRasterBand(1)
         out_lyr.Fill(0)

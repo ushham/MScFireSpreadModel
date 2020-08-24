@@ -98,8 +98,8 @@ class  RunCA:
         else:
             y = (arr[m, n] - arr[m - 1, n])
 
-        x = x * p.wfac * xwind[m, n]
-        y = - y * p.wfac * ywind[m, n]
+        x = x * (p.awfac * xwind[m, n] + p.bwfac) * xwind[m, n]
+        y = - y * (p.awfac * ywind[m, n] + p.bwfac) * ywind[m, n]
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
@@ -117,8 +117,8 @@ class  RunCA:
         else:
             y = (arr[m, n] - arr[m - 1, n])
 
-        x = x * p.sfac * xslp[m, n]
-        y = - y * p.sfac * yslp[m, n]
+        x = x * (p.asfac * xslp[m, n] ** 2 + p.bsfac * xslp[m, n] + p.csfac)
+        y = - y * (p.asfac * yslp[m, n] ** 2 + p.bsfac * yslp[m, n] + p.csfac)
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
@@ -176,7 +176,7 @@ class  RunCA:
                                 row = random.randint(0, p.num)
                                 if ~np.isnan(fb[index, row, 0]) and ~np.isnan(fb[index, row, 1]):
                                     jcalc, ellcalc = int(fb[index, row, 0]), int(fb[index, row, 1])
-                                    if self.initial[time, j + jcalc, ell + ellcalc] == 0:
+                                    if self.initial[time - 1, j + jcalc, ell + ellcalc] == 0:
                                         self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
 
                                 #Apply fire breaks
