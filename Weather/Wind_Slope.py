@@ -10,7 +10,7 @@ class WindTopography:
         self.dh = delh
         self.res = res
         self.b = bool
-        self.hillfact = self.res / (self.dh * Parameters.windhill)
+        self.hillfact = self.res / (self.dh * Parameters.windhill) * Parameters.windfact
 
     def thetahold(self):
         return np.genfromtxt(self.funcdata, delimiter=',')
@@ -31,7 +31,7 @@ class WindTopography:
         #to make range directions uniform, make v wind negitive (positive wind blows south)
         #Also set dimention
 
-        if not(bool):
+        if not(self.b):
             windop = -self.wind
             dim = 1
         else:
@@ -40,7 +40,7 @@ class WindTopography:
         #take wind direction at left (u), top (v) of the wind array for each row/column to check
         #controlling wind direction
         for i in range(self.slope.shape[dim]):
-            if bool:
+            if self.b:
                 startwin = self.wind[i, 0]
             else:
                 startwin = windop[0, i]
@@ -54,7 +54,7 @@ class WindTopography:
                 side = 1    #Direction upwind
 
             for j in rng:
-                if bool:
+                if self.b:
                     if j == rng[0]:
                         outarr[i, j] = startwin * self.tau(np.sign(startwin) * self.slope[i, j], thetahold)
                     else:

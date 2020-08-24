@@ -23,8 +23,8 @@ class SurfaceWater:
     #Exports the surface water in a given square to a given resolution
     def Extract_Data(self):
         #x and y delta as angles
-        delx = abs(self.top_left[0] - self.bot_right[0]) / self.xres
-        dely = abs(self.top_left[1] - self.bot_right[1]) / self.yres
+        delx = abs(self.top_left[1] - self.bot_right[1]) / self.xres
+        dely = abs(self.top_left[0] - self.bot_right[0]) / self.yres
 
         #distance of each box in KM
         xdelta, ydelta = llt.Coord2Dist(delx, dely, self.top_left[0])

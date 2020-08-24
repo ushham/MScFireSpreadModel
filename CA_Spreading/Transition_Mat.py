@@ -175,9 +175,9 @@ class  RunCA:
 
                                 row = random.randint(0, p.num)
                                 if ~np.isnan(fb[index, row, 0]) and ~np.isnan(fb[index, row, 1]):
-                                    jcalc, ellcalc = 2* int(fb[index, row, 0]), 2*int(fb[index, row, 1])
+                                    jcalc, ellcalc = int(fb[index, row, 0]), int(fb[index, row, 1])
                                     if self.initial[time, j + jcalc, ell + ellcalc] == 0:
-                                        self.initial[time, j + jcalc:j + jcalc+10, ell + ellcalc:ell + ellcalc+10] = 10
+                                        self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
 
                                 #Apply fire breaks
                         if self.fbrk != None:
@@ -189,4 +189,4 @@ class  RunCA:
             self.initial[time, :, 0] = self.initial[0, :, 0]
             self.initial[time, :, -1] = self.initial[0, :, -1]
 
-        return  self.initial
+        return self.initial

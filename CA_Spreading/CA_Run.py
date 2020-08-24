@@ -13,6 +13,8 @@ from FireSpotting import CombinedModel as fs
 ######### Step 1: Run Data Grab ####################:
 print("Step 1: Extracting Data")
 cd.RunData().ExtractAll()
+res = llt.Coord2Dist((pm.coord2[1] - pm.coord1[1]) / p.n, (pm.coord1[0] - pm.coord2[0]) / p.m, pm.coord1[0])
+print("Grid Resolution in km (x, y): " + str(res))
 
 #Wind Data Read in
 winnum = len(pm.times) * len(pm.datesin)

@@ -78,8 +78,8 @@ class RunData:
         if d.wat:
             print('Extracting Water Data')
             watloc = p.waterfolder + '\\' + p.waterfile
-            water = WaterData.SurfaceWater(watloc, self.coord[0], self.coord[1], self.cols, self.rows, '').Extract_Data()
-            rc.Convert2tif(water, watloc, self.coord[0], self.coord[1], self.cols, self.rows, False)
+            water = WaterData.SurfaceWater(watloc, self.coord[0], self.coord[1], self.rows, self.cols, '').Extract_Data()
+            rc.Convert2tif(water, watloc, self.coord[0], self.coord[1], self.rows, self.cols, False)
         else:
             water = 0
         return water
