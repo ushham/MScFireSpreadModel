@@ -10,6 +10,43 @@ hour2min = 60
 day2hour = 24
 K = p.vee * p.delt / p.delx ** 2
 
+#### Rates of spread from realwork -> CA
+class ROSdef:
+    def __init__(self, theta, r0):
+        self.spread = r0
+        self.burn = theta
+
+    def fuel2fd(self):
+        #converts the rates of spread to work in FD given real world numbers
+        a = 2.6298  #1st coef of quadratic
+        b = -0.0397 #2nd coef of quadratic
+        c = 0.0001  #3rd coef of quadratic
+        n = 0.092   #above value the relationship becomes linear
+        alp = 1.9   #Power law relationship
+        inv = 4.8   #Inverse relationship with burn rate
+
+        x = self.burn * self.spread ** alp
+        if x <= n:
+            out = a * x ** 2 + b * x + c
+        else:
+            out = (2 * a * n + b) * x - a * n ** 2 + c
+        return out, inv / self.burn
+
+    def fd2ca(self, vee, gam):
+        #converts the rates from FD to CA
+        a, b = 6.28503805, 0.61609013     #power law relation between vee * gamma
+        m, c = 4.39303586, 0.40454337     #linear relationship between spread rate
+
+        v = m * vee + c
+        y = a * ((vee * gam) ** b)
+        return v, y / v
+
+    def convert(self):
+        fd = self.fuel2fd()
+        output = self.fd2ca(*fd)
+        return output
+
+
 spec = [
     ('k', int32),
     ('determinate', boolean),
@@ -25,6 +62,8 @@ spec = [
     # ('ellcalc', int32)
 ]
 
+
+#### CA production
 @jitclass(spec)
 class  RunCA:
     def __init__(self, k, deturm, L, arr, windarru, windarrv, slparrx, slparry, fbrk, hr):
