@@ -3,6 +3,9 @@ from matplotlib.colors import LinearSegmentedColormap, colorConverter
 from matplotlib.animation import FuncAnimation
 from matplotlib import animation
 
+min2sec = 60
+hour2min = 60
+
 class Visualisation:
     def __init__(self, arr, back, k, save):
         self.arr = arr
@@ -10,7 +13,7 @@ class Visualisation:
         self.k = k
         self.saveloc = save
 
-    def HeatMap(self):
+    def HeatMap(self, res, start):
         figure = plt.figure()
 
         #include background in image
@@ -18,20 +21,25 @@ class Visualisation:
             for i in range(self.arr.shape[0]):
                 self.arr[i, :, :] += self.bkground
 
-        ca_plot = plt.imshow(self.arr[0, :, :], cmap='seismic', interpolation='bilinear', vmin=0, vmax=(self.k - 1))
+        ca_plot = plt.imshow(self.arr[0, :, :] / self.k, cmap='seismic', interpolation='bilinear', vmin=0, vmax=(1))
         plt.colorbar(ca_plot)
+        # plt.xticks([])
+        # plt.yticks([])
         transparent = colorConverter.to_rgba('black', alpha=0)
         wall_colormap = LinearSegmentedColormap.from_list('my_colormap', [transparent, 'green'], 5)
 
 
         def animation_func(i):
+            hr = int(i / (hour2min * min2sec // (1000 * res)) + start)
             n = i % self.arr.shape[0]
-            ca_plot.set_data(self.arr[n, :, :])
+            ca_plot.set_data(self.arr[n, :, :] / self.k)
+            plt.title("Hour +" + str(hr))
             return ca_plot
 
         ani = FuncAnimation(figure, animation_func, interval=1000, save_count=self.arr.shape[0])
         mng = plt.get_current_fig_manager()
         mng.window.showMaximized()
+
         if self.saveloc != None:
             writer = animation.FFMpegWriter(fps=30)
             ani.save(self.saveloc + ".mp4", writer=writer)
@@ -46,4 +54,6 @@ class Visualisation:
         ca_plot = plt.imshow(self.arr, cmap='seismic', interpolation='bilinear', vmin=0, vmax=(self.k - 1))
         plt.colorbar(ca_plot)
         #ca_plot.set_data(self.arr)
+        plt.xticks([])
+        plt.yticks([])
         plt.show()

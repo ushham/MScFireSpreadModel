@@ -6,13 +6,14 @@ from CA_Spreading import CA_Definition as p
 
 
 #Parameters
+min2sec = 60
 hour2min = 60
 day2hour = 24
-K = p.vee * p.delt / p.delx ** 2
+K = p.delt / p.delx ** 2
 
 #### Rates of spread from realwork -> CA
 class ROSdef:
-    def __init__(self, theta, r0):
+    def __init__(self, r0, theta):
         self.spread = r0
         self.burn = theta
 
@@ -52,6 +53,8 @@ spec = [
     ('determinate', boolean),
     ('ell', int32),
     ('initial', float32[:, :, :]),
+    ('vee', float32),
+    ('gamma', float32),
     ('uwind', float32[:, :, :]),
     ('vwind', float32[:, :, :]),
     ('xslp', float32[:, :]),
@@ -66,12 +69,14 @@ spec = [
 #### CA production
 @jitclass(spec)
 class  RunCA:
-    def __init__(self, k, deturm, L, arr, windarru, windarrv, slparrx, slparry, fbrk, hr):
+    def __init__(self, k, deturm, L, arr, windarru, windarrv, slparrx, slparry, fbrk, hr, vee, gamma):
         # CA Definitions
         self.k = k
         self.determinate = deturm
         self.ell = L
         self.initial = arr
+        self.vee = vee
+        self.gamma = gamma
 
         #External Conditions
         self.uwind = windarru
@@ -81,9 +86,10 @@ class  RunCA:
         self.fbrk = fbrk
         self.timestep = hr
 
+
     # Definition of Spread (forward Eular)
     def func(self, x, y, z):
-        n = y + K * (x - 2 * y + z) + p.delt * p.gamma * y * (1 - y)
+        n = y + self.vee * K * (x - 2 * y + z) + p.delt * self.gamma * y * (1 - y)
         return n
 
     ############## Make Transition Matrix ############
@@ -137,6 +143,7 @@ class  RunCA:
         else:
             y = (arr[m, n] - arr[m - 1, n])
 
+        #Quadratic Increase in wind speed as defined in paper
         x = x * (p.awfac * xwind[m, n] + p.bwfac) * xwind[m, n]
         y = - y * (p.awfac * ywind[m, n] + p.bwfac) * ywind[m, n]
 
@@ -156,24 +163,25 @@ class  RunCA:
         else:
             y = (arr[m, n] - arr[m - 1, n])
 
+        # Quadratic Increase in Slope speed as defined in paper
         x = x * (p.asfac * xslp[m, n] ** 2 + p.bsfac * xslp[m, n] + p.csfac)
         y = - y * (p.asfac * yslp[m, n] ** 2 + p.bsfac * yslp[m, n] + p.csfac)
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
 
-    def update2D(self, P, fb):
+    def update2D(self, P, fb, delx, hrstart):
         #loop for time steps
         t, m, n = self.initial.shape
 
         #calculate no. time steps betweek weather changes
-        wetchn = self.timestep * hour2min
+        wetchn = int(self.timestep * hour2min * min2sec / (delx * 1000))
 
         for time in range(1, t):
+            wetnum = time // wetchn + hrstart
             if time % 100 == 0:
-                print(time)
+                print(time, wetnum)
 
-            wetnum = time // wetchn
             for j in range(1, m-1):
                 for ell in range(1, n-1):
                     #Alter the direction of update on each pass
@@ -208,15 +216,13 @@ class  RunCA:
                         #Run Firebrands
                         if p.frbuse:
                             if self.initial[time, j, ell] > p.minKval and self.initial[time, j, ell] < p.maxKval:
-                                #Calculate # hours since begining of run
-                                act = p.delt * time / (60 * 60)
-                                index = int(act // self.timestep)
 
                                 row = random.randint(0, p.num)
-                                if ~np.isnan(fb[index, row, 0]) and ~np.isnan(fb[index, row, 1]):
-                                    jcalc, ellcalc = int(fb[index, row, 0]), int(fb[index, row, 1])
+                                if ~np.isnan(fb[wetnum, row, 0]) and ~np.isnan(fb[wetnum, row, 1]):
+                                    jcalc, ellcalc = int(fb[wetnum, row, 0]), int(fb[wetnum, row, 1])
                                     if self.initial[time - 1, j + jcalc, ell + ellcalc] == 0:
                                         self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
+                                        self.initial[time, (j + jcalc), (ell + ellcalc)] = 1
 
                                 #Apply fire breaks
                         if self.fbrk != None:

@@ -67,4 +67,9 @@ class WindTopography:
                         outarr[j, i] = outarr[j + side, i] * self.tau(np.sign(outarr[j + side, i]) * self.slope[j, i], thetahold)
                         outarr[j, i] = np.sign(outarr[j, i]) * min(upperlim, abs(outarr[j, i]))
 
+        if not(self.b):
+            #flip the sign back for v-dir wind
+            outarr = - outarr
+
+
         return outarr

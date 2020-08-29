@@ -19,21 +19,24 @@ k = 20        #Number of states of CA
 L = 10000        #Number of Trials to make transition matrix
 
 
-delx = 1      #CA variables
-delt = 1        #Time steps = 1 / minute
-vee = 0.05      #spreading factor
-gamma = 0.05        #growth factor
+delx = 1      #CA variables (calibrated, do not change)
+delt = 0.1        #Time steps = 1 / minute (calibrated, do not change)
+
+r0 = 0.026162     #spreading factor
+theta = 111        #growth factor
 
 
 n = 800         #x - size of array
 m = 500         #y - size of array
-t = 1000
+t = 1080
 
 
 #Wind Effects
+windtune = 1
 awfac = 0.00435
 bwfac = 0.02231
 
+slopetune = 1
 asfac = 0.269
 bsfac = 0.035
 csfac = 0
@@ -45,7 +48,7 @@ tts = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, -1]
 
 #Firebrand Parimiters
 minKval = 0
-maxKval = int(3 * k / 4)
+maxKval = k - 2
 
 meanh = 200
 num = 100

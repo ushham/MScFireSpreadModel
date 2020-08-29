@@ -93,10 +93,10 @@ class FireBrand:
 
         return x + yoffc, y + xoffc
 
-    def Collection(self, wxtot, wytot, p0, xres, yres, shift, time):
+    def Collection(self, wxtot, wytot, p0, xres, yres, shift):
         #To get around numba issue not letting this class run (scipy), we generate a large sample of firebrand trajectories and pick from it randomly
         #Takes in all wind information for given time and produces random sample of n firebrands for each time period
-
+        time = wxtot.shape[0]
         hold = np.empty((time, self.num, 2))
         for i in range(time):
             out = self.journey(np.max(wxtot[i, :, :]), np.max(wytot[i, :, :]), p0, xres, yres, shift)
