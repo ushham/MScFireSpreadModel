@@ -58,9 +58,11 @@ ini = p.k - 1
 ######### Step 3: Initial conditions ####################:
 
 arr = np.zeros((p.t, p.m, p.n), dtype=np.float32)
-#arr[0, 250:260, 350:360] = ini
-arr[0, :, :] = rc.readrst(pm.saveloc + "\\Res hr+12") * (p.k - 1)
+#arr[0, 290:300, 370:380] = ini
 
+arr[0, :, :] = rc.readrst(pm.saveloc + "\\Res hr+36") * (p.k - 1)
+
+n=3
 ######### Step 4: Run CA ####################:
 print("Step 4: Running CA")
 print("Vee, Gamma:" + str(vee) + ", "+ str(gamma) )
@@ -74,12 +76,12 @@ np.savetxt(pm.saveloc + '\\FireBrands2.csv', fb[1, :, :], delimiter=',')
 ca = tm.RunCA(p.k, p.deturm, p.L, arr, windu, windv, slpx, slpy, fbrk, hrsp, vee, gamma)
 #P = ca.Pmaker()
 P = np.genfromtxt(pm.saveloc + '\\PMat.csv', delimiter=',')
-arr = ca.update2D(P, fb, max(*res), 1)
+arr = ca.update2D(P, fb, max(*res), n)
 
 print('Saving CA')
-rc.Convert2tif(arr[-1, :, :] / (p.k - 1), pm.saveloc + "\\Res hr+24", pm.coord1, pm.coord2, p.n, p.m, False)
+rc.Convert2tif(arr[-1, :, :] / (p.k - 1), pm.saveloc + "\\Res hr+48", pm.coord1, pm.coord2, p.n, p.m, False)
 np.savetxt(pm.saveloc + '\\PMat.csv', P, delimiter=',')
 
 ######### Step 5: Visualisation ####################:
 print("Last Step: Making Animation")
-vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "animationALLTESTfbtest").HeatMap(max(*res), 12)
+vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "animationALLTESTfbtest").HeatMap(max(*res), 36)

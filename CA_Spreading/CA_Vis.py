@@ -14,7 +14,7 @@ class Visualisation:
         self.saveloc = save
 
     def HeatMap(self, res, start):
-        figure = plt.figure()
+        figure, ax = plt.subplots()
 
         #include background in image
         if self.bkground.any() != None:
@@ -25,6 +25,8 @@ class Visualisation:
         plt.colorbar(ca_plot)
         # plt.xticks([])
         # plt.yticks([])
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
         transparent = colorConverter.to_rgba('black', alpha=0)
         wall_colormap = LinearSegmentedColormap.from_list('my_colormap', [transparent, 'green'], 5)
 

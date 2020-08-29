@@ -47,8 +47,8 @@ tts = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, -1]
 
 
 #Firebrand Parimiters
-minKval = 0
-maxKval = k - 2
+minKval = 1
+maxKval = int(3 * k / 4)
 
 meanh = 200
 num = 100
