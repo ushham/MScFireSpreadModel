@@ -27,7 +27,7 @@ class GribExtract:
 
 
     def CoordY(self, y):
-        coordy = round(((self.coord0[0] - self.top_left[0]) - self.res * y) * (1 / self.res)) / (1 / self.res)
+        coordy = round(((self.coord0[0] - self.top_left[0]) + self.res * y) * (1 / self.res)) / (1 / self.res)
         coordy = int(coordy / self.res)
         return coordy
 
@@ -49,10 +49,10 @@ class GribExtract:
             type = message[self.elementlabel]
 
             if int(timeband[0]) == unixtime and type == self.mat:
-                out = np.zeros((self.xres, self.yres))
+                out = np.zeros((self.yres, self.xres))
                 for x in range(self.xres):
                     for y in range(self.yres):
-                        out[x, y] = dataset.GetRasterBand(i).ReadAsArray()[self.CoordY(y), self.CoordX(x)]
+                        out[y, x] = dataset.GetRasterBand(i).ReadAsArray()[self.CoordY(y), self.CoordX(x)]
 
         return out
 

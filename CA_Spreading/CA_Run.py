@@ -58,9 +58,9 @@ ini = p.k - 1
 ######### Step 3: Initial conditions ####################:
 
 arr = np.zeros((p.t, p.m, p.n), dtype=np.float32)
-#arr[0, 290:300, 370:380] = ini
+arr[0, 290:300, 370:380] = ini
 
-arr[0, :, :] = rc.readrst(pm.saveloc + "\\Res hr+36") * (p.k - 1)
+#arr[0, :, :] = rc.readrst(pm.saveloc + "\\Res hr+36") * (p.k - 1)
 
 n=3
 ######### Step 4: Run CA ####################:
@@ -74,8 +74,8 @@ np.savetxt(pm.saveloc + '\\FireBrands2.csv', fb[1, :, :], delimiter=',')
 
 
 ca = tm.RunCA(p.k, p.deturm, p.L, arr, windu, windv, slpx, slpy, fbrk, hrsp, vee, gamma)
-#P = ca.Pmaker()
-P = np.genfromtxt(pm.saveloc + '\\PMat.csv', delimiter=',')
+P = ca.Pmaker()
+#P = np.genfromtxt(pm.saveloc + '\\PMat.csv', delimiter=',')
 arr = ca.update2D(P, fb, max(*res), n)
 
 print('Saving CA')

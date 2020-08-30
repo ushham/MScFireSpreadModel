@@ -3,9 +3,9 @@ savedmat = False
 
 # Updating Data sources on/off
 ele = False     #elevation data
-wth = False     #weather data
-wat = False     #water data
-rod = False     #road data
+wth = True     #weather data
+wat = True     #water data
+rod = True     #road data
 
 # Using Data sources on/off
 eleuse = True     #elevation data
@@ -26,8 +26,8 @@ r0 = 0.026162     #spreading factor
 theta = 111        #growth factor
 
 
-n = 800         #x - size of array
-m = 500         #y - size of array
+n = 934         #x - size of array
+m = 253         #y - size of array
 t = 1080
 
 

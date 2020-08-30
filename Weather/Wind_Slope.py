@@ -21,7 +21,7 @@ class WindTopography:
         gap = hold[0, 1] - hold[0, 0]
         start = theta - hold[0, 0]
         loc = int(start / gap)
-        return hold[1, loc] * self.hillfact + 1
+        return hold[1, min(loc, hold.shape[1]-1)] * self.hillfact + 1
 
     def Data_Extract(self):
         #Expects 2d array of slope and 2d array of wind at same resolution. true = u, false = v

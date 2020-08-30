@@ -50,7 +50,6 @@ class WindData:
 
                 x1 = int(abs(xloc - self.top_left[1]) / self.res)
                 y1 = int(abs(yloc - self.top_left[0]) / self.res)
-
                 uout[y, x] = u[y1, x1]
                 vout[y, x] = v[y1, x1]
 
