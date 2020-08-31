@@ -57,8 +57,7 @@ spec = [
     ('gamma', float32),
     ('uwind', float32[:, :, :]),
     ('vwind', float32[:, :, :]),
-    ('xslp', float32[:, :]),
-    ('yslp', float32[:, :]),
+    ('ele', float32[:, :]),
     ('fbrk', float32[:, :]),
     ('timestep', int32)
     # ('jcalc', int32),
@@ -69,7 +68,7 @@ spec = [
 #### CA production
 @jitclass(spec)
 class  RunCA:
-    def __init__(self, k, deturm, L, arr, windarru, windarrv, slparrx, slparry, fbrk, hr, vee, gamma):
+    def __init__(self, k, deturm, L, arr, windarru, windarrv, heights, fbrk, hr, vee, gamma):
         # CA Definitions
         self.k = k
         self.determinate = deturm
@@ -81,8 +80,7 @@ class  RunCA:
         #External Conditions
         self.uwind = windarru
         self.vwind = windarrv
-        self.xslp = slparrx
-        self.yslp = slparry
+        self.ele = heights
         self.fbrk = fbrk
         self.timestep = hr
 
@@ -133,39 +131,48 @@ class  RunCA:
     def wind(self, arr, xwind, ywind, m, n):
         #x dir
         if xwind[m, n] > 0:
-            x = (arr[m, n] - arr[m, n - 1])
+            x = (arr[m, n - 1] - arr[m, n])
         else:
             x = (arr[m, n + 1] - arr[m, n])
 
         #y dir
-        if ywind[m, n] > 0:
+        if ywind[m, n] < 0:
             y = (arr[m + 1, n] - arr[m, n])
         else:
-            y = (arr[m, n] - arr[m - 1, n])
+            y = (arr[m - 1, n] - arr[m, n])
 
         #Quadratic Increase in wind speed as defined in paper
-        x = x * (p.awfac * xwind[m, n] + p.bwfac) * xwind[m, n]
-        y = - y * (p.awfac * ywind[m, n] + p.bwfac) * ywind[m, n]
+        x = x * (p.awfac * abs(xwind[m, n]) + p.bwfac) * abs(xwind[m, n]) * p.windtune
+        y = y * (p.awfac * abs(ywind[m, n]) + p.bwfac) * abs(ywind[m, n]) * p.windtune
 
-        return - 1/2 * (p.delt / p.delx) * (x + y)
+        return  1/2 * (p.delt / p.delx) * (x + y)
 
 
-    def slope(self, arr, xslp, yslp, m, n):
+    def slope(self, arr, heights, res, m, n):
+
         #x dir
-        if xslp[m, n] > 0:
-            x = (arr[m, n] - arr[m, n-1])
+        if (heights[m, n] - heights[m, n - 1]) > (heights[m, n] - heights[m, n + 1]):
+            x = (arr[m, n] - arr[m, n - 1])
+            delx = (heights[m, n] - heights[m, n - 1]) / res
+            delx = max(delx, 0)
         else:
-            x = (arr[m, n + 1] - arr[m, n])
+            x = (arr[m, n] - arr[m, n + 1])
+            delx = (heights[m, n] - heights[m, n + 1]) / res
+            delx = max(delx, 0)
 
         #y dir
-        if yslp[m, n] > 0:
-            y = (arr[m + 1, n] - arr[m, n])
-        else:
+        if (heights[m, n] - heights[m - 1, n]) > (heights[m, n] - heights[m + 1, n]):
             y = (arr[m, n] - arr[m - 1, n])
+            dely = (heights[m, n] - heights[m - 1, n]) / res
+            dely = max(dely, 0)
+        else:
+            y = (arr[m, n] - arr[m + 1, n])
+            dely = (heights[m, n] - heights[m + 1, n]) / res
+            dely = max(dely, 0)
 
         # Quadratic Increase in Slope speed as defined in paper
-        x = x * (p.asfac * xslp[m, n] ** 2 + p.bsfac * xslp[m, n] + p.csfac)
-        y = - y * (p.asfac * yslp[m, n] ** 2 + p.bsfac * yslp[m, n] + p.csfac)
+        x = x * (p.asfac * delx ** 2 + p.bsfac * delx + p.csfac) * p.slopetune
+        y = - y * (p.asfac * dely ** 2 + p.bsfac * dely + p.csfac) * p.slopetune
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
 
@@ -185,53 +192,59 @@ class  RunCA:
             for j in range(1, m-1):
                 for ell in range(1, n-1):
                     #Alter the direction of update on each pass
-                    if time % 4 == 0:
-                        alpha = int(self.initial[time - 1, j, ell - 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell + 1])
-                        beta = int(self.initial[time - 1, j - 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j + 1, ell])
-                    elif time % 4 == 1:
-                        alpha = int(self.initial[time - 1, j, ell + 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell - 1])
-                        beta = int(self.initial[time - 1, j - 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j + 1, ell])
-                    elif time % 4 == 2:
-                        alpha = int(self.initial[time - 1, j, ell + 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell - 1])
-                        beta = int(self.initial[time - 1, j + 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j - 1, ell])
+                    if (self.initial[time - 1, j, ell] == (p.k - 1)):
+                        self.initial[time, j, ell] = (p.k - 1)
                     else:
-                        alpha = int(self.initial[time - 1, j, ell - 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell + 1])
-                        beta = int(self.initial[time - 1, j + 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j - 1, ell])
+                        if time % 4 == 0:
+                            alpha = int(self.initial[time - 1, j, ell - 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell + 1])
+                            beta = int(self.initial[time - 1, j - 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j + 1, ell])
+                        elif time % 4 == 1:
+                            alpha = int(self.initial[time - 1, j, ell + 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell - 1])
+                            beta = int(self.initial[time - 1, j - 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j + 1, ell])
+                        elif time % 4 == 2:
+                            alpha = int(self.initial[time - 1, j, ell + 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell - 1])
+                            beta = int(self.initial[time - 1, j + 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j - 1, ell])
+                        else:
+                            alpha = int(self.initial[time - 1, j, ell - 1] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j, ell + 1])
+                            beta = int(self.initial[time - 1, j + 1, ell] * self.k ** 2 + self.initial[time - 1, j, ell] * self.k + self.initial[time - 1, j - 1, ell])
 
-                    if self.determinate:
-                        self.initial[ell, j] = 1/2 * (P[alpha, 0] + P[beta, 0])
-                    else:
-                        prob1 = random.random()
-                        prob2 = random.random()
+                        if self.determinate:
+                            self.initial[ell, j] = 1/2 * (P[alpha, 0] + P[beta, 0])
+                        else:
+                            prob1 = random.random()
+                            prob2 = random.random()
 
-                        #Update from spread
-                        self.initial[time, j, ell] = np.ceil(1/2 * (self.colcheck(prob1, alpha, P) + self.colcheck(prob2, beta, P)))
+                            #Update from spread
+                            self.initial[time, j, ell] = np.ceil(1/2 * (self.colcheck(prob1, alpha, P) + self.colcheck(prob2, beta, P)))
 
-                        #wind and slope
-                        windcor = self.wind(self.initial[time - 1, :, :], self.uwind[wetnum, :, :], self.vwind[wetnum, :, :], j, ell)
-                        slopecor = self.slope(self.initial[time - 1, :, :], self.xslp, self.yslp, j, ell)
-                        self.initial[time, j, ell] = round(self.initial[time, j, ell] + windcor + slopecor)
-                        self.initial[time, j, ell] = max(min(self.initial[time, j, ell], self.k - 1), 0)
+                            # Run Firebrands
+                            if p.frbuse:
+                                if self.initial[time, j, ell] > p.minKval and self.initial[time, j, ell] < p.maxKval:
 
-                        #Run Firebrands
-                        if p.frbuse:
-                            if self.initial[time, j, ell] > p.minKval and self.initial[time, j, ell] < p.maxKval:
+                                    row = random.randint(0, p.num)
+                                    if ~np.isnan(fb[wetnum, row, 0]) and ~np.isnan(fb[wetnum, row, 1]):
+                                        ellcalc, jcalc = int(fb[wetnum, row, 0]), int(fb[wetnum, row, 1])
+                                        if self.initial[time - 1, j + jcalc, ell + ellcalc] == 0:
+                                            self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
+                                            self.initial[time, (j + jcalc), (ell + ellcalc)] = 1
 
-                                row = random.randint(0, p.num)
-                                if ~np.isnan(fb[wetnum, row, 0]) and ~np.isnan(fb[wetnum, row, 1]):
-                                    jcalc, ellcalc = int(fb[wetnum, row, 0]), int(fb[wetnum, row, 1])
-                                    if self.initial[time - 1, j + jcalc, ell + ellcalc] == 0:
-                                        self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
-                                        self.initial[time, (j + jcalc), (ell + ellcalc)] = 1
 
-                                #Apply fire breaks
-                        if self.fbrk != None:
-                            self.initial[time, j, ell] = self.fbrk[j, ell] * self.initial[time, j, ell]
+                            #wind and slope
+                            windcor = self.wind(self.initial[time - 1, :, :], self.uwind[wetnum, :, :], self.vwind[wetnum, :, :], j, ell)
+                            slopecor = self.slope(self.initial[time - 1, :, :], self.ele, delx * 1000, j, ell)
+                            self.initial[time, j, ell] = round(self.initial[time, j, ell] + windcor + slopecor)
+                            self.initial[time, j, ell] = max(min(self.initial[time, j, ell], self.k - 1), self.initial[time-1, j, ell], 0)
 
-            # loop for array width (set up with neuman BC)
-            self.initial[time, 0, :] = self.initial[0, 0, :]
-            self.initial[time, -1, :] = self.initial[0, -1, :]
-            self.initial[time, :, 0] = self.initial[0, :, 0]
-            self.initial[time, :, -1] = self.initial[0, :, -1]
+
+
+                                    #Apply fire breaks
+                            if p.brkuse:
+                                self.initial[time, j, ell] = self.fbrk[j, ell] * self.initial[time, j, ell]
+
+                # loop for array width (set up with neuman BC)
+                self.initial[time, 0, :] = self.initial[0, 0, :]
+                self.initial[time, -1, :] = self.initial[0, -1, :]
+                self.initial[time, :, 0] = self.initial[0, :, 0]
+                self.initial[time, :, -1] = self.initial[0, :, -1]
 
         return self.initial

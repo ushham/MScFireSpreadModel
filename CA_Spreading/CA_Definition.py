@@ -3,9 +3,9 @@ savedmat = False
 
 # Updating Data sources on/off
 ele = False     #elevation data
-wth = True     #weather data
-wat = True     #water data
-rod = True     #road data
+wth = False     #weather data
+wat = False     #water data
+rod = False     #road data
 
 # Using Data sources on/off
 eleuse = True     #elevation data
@@ -26,17 +26,17 @@ r0 = 0.026162     #spreading factor
 theta = 111        #growth factor
 
 
-n = 934         #x - size of array
-m = 253         #y - size of array
-t = 1080
+n = 1090         #x - size of array
+m = 549         #y - size of array
+t = 864
 
 
 #Wind Effects
-windtune = 1
+windtune = 5.5
 awfac = 0.00435
 bwfac = 0.02231
 
-slopetune = 1
+slopetune = 18
 asfac = 0.269
 bsfac = 0.035
 csfac = 0

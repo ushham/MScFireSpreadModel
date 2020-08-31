@@ -99,7 +99,7 @@ class FireBrand:
         time = wxtot.shape[0]
         hold = np.empty((time, self.num, 2))
         for i in range(time):
-            out = self.journey(np.max(wxtot[i, :, :]), np.max(wytot[i, :, :]), p0, xres, yres, shift)
+            out = self.journey(np.sign(np.max(wxtot[i, :, :])) * np.max(abs(wxtot[i, :, :])), np.sign(np.max(wytot[i, :, :])) * np.max(abs(wytot[i, :, :])), p0, xres, yres, shift)
             if len(out[0]) > 0:
                 hold[i, :, 0], hold[i, :, 1] = out[0], out[1]
         return hold
