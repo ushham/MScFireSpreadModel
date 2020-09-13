@@ -14,6 +14,7 @@ brkuse = True     #break data
 frbuse = True     #Firebrand sim
 
 
+#### CA Parameters ####
 k = 20        #Number of states of CA
 
 L = 10000        #Number of Trials to make transition matrix
@@ -26,27 +27,21 @@ r0 = 0.026162     #spreading factor
 theta = 111        #growth factor
 
 
-n = 1090         #x - size of array
-m = 549         #y - size of array
-t = 864
+n = 940         #x - size of array
+m = 740         #y - size of array
+t = 1728
 
-
-#Wind Effects
-windtune = 5.5
+#### Wind Effects #####
+windtune = 6
 awfac = 0.00435
 bwfac = 0.02231
 
-slopetune = 18
+slopetune = 1
 asfac = 0.269
 bsfac = 0.035
 csfac = 0
 
-
-#Vis parameters
-tts = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, -1]
-
-
-#Firebrand Parimiters
+#### Firebrand Parimiters ####
 minKval = 1
 maxKval = int(3 * k / 4)
 

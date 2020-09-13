@@ -2,6 +2,7 @@ import numpy as np
 from FireSpotting import Ascent, FreeFall, Ignition
 
 class FireBrand:
+    #Combines the three phases of firebrand flight, and produces numerical experiements
     def __init__(self, lam, num):
         self.lam = lam
         self.num = num
@@ -62,7 +63,6 @@ class FireBrand:
         igprob = SubMod3.PDF(r)
         return igprob
 
-
     def journey(self, wx, wy, p0, xres, yres, shift):
         r, z = self.loft()
         t, rf = self.float(r, z, wx)
@@ -103,4 +103,3 @@ class FireBrand:
             if len(out[0]) > 0:
                 hold[i, :, 0], hold[i, :, 1] = out[0], out[1]
         return hold
-

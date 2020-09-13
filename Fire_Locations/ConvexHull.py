@@ -40,4 +40,3 @@ def CreateSurface(fileloc, filename, dumploc, coord1, coord2, sizex, sizey, bool
     else:
         print('Not enough points at ' + dumploc)
     return 0
-

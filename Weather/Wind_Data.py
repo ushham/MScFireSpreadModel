@@ -63,6 +63,5 @@ class WindData:
             rc.Convert2tif(uout, saveloc + 'u', self.top_left, self.bot_right, dx, dy, False)
             rc.Convert2tif(vout, saveloc + 'v', self.top_left, self.bot_right, dx, dy, False)
         else:
-
             return uout, vout
         return 0

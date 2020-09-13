@@ -4,7 +4,6 @@ from numba.experimental import jitclass
 import random
 from CA_Spreading import CA_Definition as p
 
-
 #Parameters
 min2sec = 60
 hour2min = 60
@@ -145,8 +144,7 @@ class  RunCA:
         x = x * (p.awfac * abs(xwind[m, n]) + p.bwfac) * abs(xwind[m, n]) * p.windtune
         y = y * (p.awfac * abs(ywind[m, n]) + p.bwfac) * abs(ywind[m, n]) * p.windtune
 
-        return  1/2 * (p.delt / p.delx) * (x + y)
-
+        return 1/2 * (p.delt / p.delx) * (x + y)
 
     def slope(self, arr, heights, res, m, n):
 
@@ -175,7 +173,6 @@ class  RunCA:
         y = - y * (p.asfac * dely ** 2 + p.bsfac * dely + p.csfac) * p.slopetune
 
         return - 1/2 * (p.delt / p.delx) * (x + y)
-
 
     def update2D(self, P, fb, delx, hrstart):
         #loop for time steps
@@ -228,14 +225,11 @@ class  RunCA:
                                             self.initial[time - 1, (j + jcalc), (ell + ellcalc)] = 1
                                             self.initial[time, (j + jcalc), (ell + ellcalc)] = 1
 
-
                             #wind and slope
                             windcor = self.wind(self.initial[time - 1, :, :], self.uwind[wetnum, :, :], self.vwind[wetnum, :, :], j, ell)
                             slopecor = self.slope(self.initial[time - 1, :, :], self.ele, delx * 1000, j, ell)
                             self.initial[time, j, ell] = round(self.initial[time, j, ell] + windcor + slopecor)
                             self.initial[time, j, ell] = max(min(self.initial[time, j, ell], self.k - 1), self.initial[time-1, j, ell], 0)
-
-
 
                                     #Apply fire breaks
                             if p.brkuse:

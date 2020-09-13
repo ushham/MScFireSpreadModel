@@ -4,7 +4,6 @@ import numpy as np
 
 #GRIB Constants
 #resolution of GRIB files in degrees
-
 class GribExtract:
     def  __init__(self, fileloc, coordstart, coord1, datet, ele, nx, ny):
         self.res = 0.25
@@ -25,12 +24,10 @@ class GribExtract:
         coordx = int(coordx / self.res)
         return coordx
 
-
     def CoordY(self, y):
         coordy = round(((self.coord0[0] - self.top_left[0]) + self.res * y) * (1 / self.res)) / (1 / self.res)
         coordy = int(coordy / self.res)
         return coordy
-
 
     def Extract_Data(self):
         #Open file
@@ -55,5 +52,3 @@ class GribExtract:
                         out[y, x] = dataset.GetRasterBand(i).ReadAsArray()[self.CoordY(y), self.CoordX(x)]
 
         return out
-
-

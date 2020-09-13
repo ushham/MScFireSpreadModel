@@ -1,10 +1,9 @@
 import numpy as np
 from Control import Parameters
 
-
 class WindTopography:
     def __init__(self, slope, wind, delh, res, bool):
-        self.funcdata = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\CSVs\Slope-Wind\Slope-Wind 200711.csv"
+        self.funcdata = r'' #location of file describing interaction between slope/wind
         self.slope = slope
         self.wind = wind
         self.dh = delh
@@ -70,6 +69,5 @@ class WindTopography:
         if not(self.b):
             #flip the sign back for v-dir wind
             outarr = - outarr
-
 
         return outarr

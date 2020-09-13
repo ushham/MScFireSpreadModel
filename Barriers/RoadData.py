@@ -52,7 +52,6 @@ class RoadData:
             w.record(*rec)
         return 0
 
-
     def shp2rst(self):
         #Convert the shp file to a raster and then export to
         #tif or array
@@ -60,7 +59,6 @@ class RoadData:
         #open data and extract layer at specified area
         roads = gd.ogr.Open(self.fileloc)
         roadlr = roads.GetLayer()
-
 
         #grid size (arc degrees)
         xlen = (self.bot_right[1] - self.top_left[1]) / self.xres
@@ -93,4 +91,3 @@ class RoadData:
         myarray = np.where(myarray != 1 , 0, myarray)
 
         return myarray
-

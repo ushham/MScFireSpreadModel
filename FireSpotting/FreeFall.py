@@ -3,7 +3,7 @@ import scipy.integrate as int
 from scipy.optimize import root
 
 class SubModel2:
-
+    #Describes the free fall section of the firebrand flight
     def __init__(self, eta, w0, wx):
         self.eta = eta
         self.w0 = w0

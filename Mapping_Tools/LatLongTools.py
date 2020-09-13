@@ -21,8 +21,6 @@ def CoordLoc(coord):
 
     return [n, e]
 
-
-
 def Coord2Dist(delx, dely, lat):
     #Returns distance given grid size
     erad = 6371  # radius of the earth in km
@@ -32,7 +30,6 @@ def Coord2Dist(delx, dely, lat):
     xdelta = (delx / deg) * erad * tau
     ydelta = (dely / deg) * np.sin(tau / 4 - abs(lat) * tau / deg) * erad * tau
     return xdelta, ydelta
-
 
 def PrintLatLong(dumploc, coord1, coord2, xres, yres):
     delx = abs(coord1[1] - coord2[1]) / xres

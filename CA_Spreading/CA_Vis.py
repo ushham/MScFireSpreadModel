@@ -27,9 +27,6 @@ class Visualisation:
         # plt.yticks([])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        transparent = colorConverter.to_rgba('black', alpha=0)
-        wall_colormap = LinearSegmentedColormap.from_list('my_colormap', [transparent, 'green'], 5)
-
 
         def animation_func(i):
             hr = int(i / (hour2min * min2sec // (1000 * res)) + start)
@@ -47,7 +44,6 @@ class Visualisation:
             ani.save(self.saveloc + ".mp4", writer=writer)
         else:
             plt.show()
-
 
     #def OneDim(self, rc, num):
 

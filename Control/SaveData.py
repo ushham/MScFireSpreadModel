@@ -5,7 +5,6 @@ from Mapping_Tools import LatLongTools as llt
 from Control import Parameters as p
 from Weather import Wind_Data as wnd
 
-
 saveloc = p.saveloc
 
 xsize = p.xsize
@@ -23,15 +22,11 @@ llt.PrintLatLong(saveloc, coord1, coord2, xsize, ysize)
 print('Extracting Elevation Data')
 eleloc = p.elefolder + '\\' + p.elefile
 elevation = ed.Elevation(eleloc, coord1, coord2, xsize, ysize, saveloc, 'ElevationData')
-#delh = elevation.Extract_Data()
-
-
 
 #Extract Surface Water Data
 print('Extracting Surface Water Data')
 watloc = p.waterfolder + '\\' + p.waterfile
 water = wd.SurfaceWater(watloc, coord1, coord2, xsize, ysize, saveloc)
-#wat = water.Extract_Data()
 
 #Extract Fire Data
 print('Extracting Fire Data')

@@ -10,7 +10,6 @@ from Mapping_Tools import LatLongTools as llt
 import numpy as np
 
 class RunData:
-
     def __init__(self):
         self.coord = (p.coord1, p.coord2)
         self.saveloc = p.saveloc
@@ -45,7 +44,6 @@ class RunData:
             vwind = np.empty((dim, self.cols, self.rows))
             i = 0
 
-
             print('Extracting Wind Data')
             for date in p.datesin:
                 for time in p.times:
@@ -70,7 +68,6 @@ class RunData:
                 rc.Convert2tif(vwind[ell, :, :], windloc + "-v", self.coord[0], self.coord[1], self.rows, self.cols, False)
 
             return 0
-
 
     ######   Fire breaks   ########
     #Surface Water
@@ -119,10 +116,3 @@ class RunData:
         self.WeatherData(dh)
         self.CombineBreaks()
         return 0
-
-
-
-
-
-
-

@@ -6,6 +6,7 @@ from scipy.interpolate import griddata
 from Mapping_Tools import RasterConvert as rc
 
 class FireLayers:
+    #Creates intopolated surfaces to display fire location from discrete observational data
     def __init__(self, loc, coord1, coord2, dumploc, hrspace, datesin, xsize, ysize):
         self.day2hour = 24
         self.firetime = 'ACQ_TIME'

@@ -1,7 +1,6 @@
 import numpy as np
 from osgeo import gdal
 from osgeo import osr
-from Mapping_Tools import LatLongTools as llt
 
 #Exports csv as tif file
 def Convert2tif(inputfile, dumploc, coord1, coord2, xsize, ysize, boolian):
@@ -22,7 +21,6 @@ def Convert2tif(inputfile, dumploc, coord1, coord2, xsize, ysize, boolian):
 
     xres = (xmax-xmin)/float(xsize)
     yres = (ymax-ymin)/float(ysize)
-
 
     geotransform = (xmin, xres, 0, ymax, 0, -yres)
     # (top left x, w-e pixel resolution, rotation (0 if North is up),

@@ -1,36 +1,34 @@
-from datetime import datetime, timezone
-
-coord1 = (39.922, -121.8)
-coord2 = (39.6, -121.31)
+coord1 = (-35.66, 136.532)
+coord2 = (-36.07, 136.955)
 
 #only use for pure data extraction, not the running of the CA
 xsize = 750
 ysize = 750
 
-datesin = ['2018-11-08', '2018-11-09', '2018-11-10', '2018-11-11', '2018-11-12']
-times = ['00:00', '12:00']
+datesin = []    #dates to extract data for in 'yyyy-mm-dd' format
+times = []      #times to extract in 'hh:mm' format
 
-saveloc = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Outputs\01 Results\Camp Fire\Runs'
+saveloc = r''   #location for data to be saved to
 
 #FileLocations
-waterfolder = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Surface Water\EU Database\130W-40N'
-waterfile = 'seasonality_130W_40N_v1_1.tif'
+waterfolder = r''   #file location of surface water data
+waterfile = ''      #file name
 
-elefolder = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Altitudes\US\GMTED2010 Data\FID25-NW USA'
-elefile = '30N150W_20101117_gmted_mea075.tif'
+elefolder = r''     #file location of elevation data
+elefile = ''        #file name
 
-firefolder = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\FireData\USA 2018\DL_FIRE_V1_149275'
-firefile = 'fire_archive_V1_149275.shp'
+firefolder = r''    #file location of fire observation data
+firefile = ''       #file name
 
-weatherfolder = r'C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\GRIB\California'
-weatherfile = 'adaptor.mars.internal-1598787975.3658226-7819-13-fb769ce2-840e-40d5-9f6b-2dec334a7040.grib'
+weatherfolder = r'' #file location of GRIB data
+weatherfile = ''    #file name
 
-roadfolder = r"C:\Users\UKOGH001\Documents\03 Masters\10 Project\GIS\Road Data\California\norcal-latest-free"
-roadfile = "gis_osm_roads_free_1.shp"
+roadfolder = r''    #file location of road data
+roadfile = ''       #file name
 
 #Weather Data
 hrspace = 12
-startcoords = (42, -125)
+startcoords = (-12, 111)
 
 #Windspeed/hill length interaction
 windfact = 0.1      #Parameter to allter effect of slope on wind speed

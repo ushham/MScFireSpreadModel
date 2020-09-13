@@ -5,6 +5,7 @@ from Mapping_Tools import RasterConvert as rc
 from scipy.interpolate import RegularGridInterpolator as rgi
 
 class Elevation:
+    #Extract elevation data and calculate slopes
     def __init__(self, loc, coord1, coord2, xsize, ysize, dumploc, savename):
         self.fileloc = loc
         self.top_left = coord1
@@ -118,5 +119,3 @@ class Elevation:
         np.savetxt(savespotx, xslope, delimiter=',')
         np.savetxt(savespoty, yslope, delimiter=',')
         return delh
-
-
