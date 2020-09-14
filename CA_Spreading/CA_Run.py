@@ -21,11 +21,8 @@ windu = np.zeros((winnum, p.m, p.n), dtype=np.float32)
 windv = np.zeros((winnum, p.m, p.n), dtype=np.float32)
 if p.wthuse:   #check if there is weather data to extract
     for i in range(winnum):
-        if i == 5:
-            windv[i, :, :] = rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-v")  # negitive sign as wind direction is reverse of axis direction
-        else:
-            windu[i, :, :] = rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-u")
-            windv[i, :, :] = -rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-v")    #negitive sign as wind direction is reverse of axis direction
+        windu[i, :, :] = rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-u")
+        windv[i, :, :] = -rc.readrst(pm.saveloc + "\\" + "WindData" + str(i) + "-v")    #negitive sign as wind direction is reverse of axis direction
 
 
 #check if there is elevation data
@@ -81,4 +78,4 @@ rc.Convert2tif(arr[-1, :, :] / (p.k - 1), pm.saveloc + "\\", pm.coord1, pm.coord
 ######### Step 5: Visualisation ####################:
 print(time.time()-starttime)
 print("Last Step: Making Animation")
-vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "Res 96hr Run3").HeatMap(max(*res), 72)
+vs.Visualisation(arr, fbrk, p.k, pm.saveloc + "\\" + "Res 96hr Run3").HeatMap(max(*res), 0)
